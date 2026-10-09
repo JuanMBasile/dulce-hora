@@ -27,3 +27,14 @@ El plan nombra siete skills. Verifiqué cada una en disco; no me apoyo en ningun
 - `.gitattributes` fuerza LF, porque Vercel compila en Linux.
 - `assets-src/` (originales de fotos) queda fuera de git; se versionan solo los masters optimizados de `app/assets/photos/`.
 - Commits por hito, en español.
+
+## M1 · Scaffold
+
+- **Scaffold manual**, no la plantilla oficial de React Router (que trae Tailwind, Docker y `ssr: true`).
+- `react-router.config.ts`: `ssr: false` y `prerender: ["/"]`. El build genera `build/client/index.html` con el HTML completo y lo hidrata en el cliente; `build/server` se borra solo. Los flags `v8_*`, incluido `v8_viteEnvironmentApi`, compilan sin problemas con Vite 8.3.1.
+- **vitest 5.0.3 en lugar de 5.0.1.** Con 5.0.1, npm 10.9.2 falla con `Cannot read properties of null (reading 'edgesOut')`: el peer opcional `@vitest/browser-playwright` resuelve a 5.0.3, que exige vitest 5.0.3, y el árbol de peers de npm se rompe. Es el último parche de la misma línea (publicado el 2026-09-30) y no cambia la API.
+- Las dependencias de desarrollo se instalaron en tandas por el mismo bug de npm.
+- `npm audit --omit=dev`: **0 vulnerabilidades en producción.** Las 29 de desarrollo (19 moderadas y 10 altas) vienen de `lighthouse` (sentry, opentelemetry, puppeteer-core) y de `serve` (compression). Son herramientas locales que solo escuchan en 127.0.0.1 y no se publican; no hay versión de Lighthouse sin esas dependencias.
+- **Marca de hidratación:** `root.tsx` agrega `data-hydrated` a `<html>` cuando React termina de hidratar. Los e2e la esperan antes de interactuar.
+- **`scripts/check-budget.mjs`** lee el `index.html` prerenderizado, porque React Router borra el manifest de Vite. Mide el JS inicial (modulepreload, scripts e imports del script inline), CSS, HTML, fuentes precargadas, la foto del hero y que el chunk de features de Motion no esté entre los scripts iniciales.
+- **`vercel.json`**: `framework: null` y salida `build/client`. Las redirecciones 307 de `/about`, `/products`, `/branches` y `/franchise` a anclas son **provisorias**: sirven para previews y **bloquean el deploy a producción** hasta resolver la migración de URLs (`docs/migracion-seo.md`, M10).
