@@ -1,0 +1,11 @@
+# Finales de línea LF en todo el repo (Vercel corre en Linux)
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff2 binary

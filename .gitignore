@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+
+# Build y tipos generados
+build/
+.react-router/
+.vite/
+
+# Tests y mediciones
+test-results/
+playwright-report/
+blob-report/
+reports/
+coverage/
+
+# Originales de fotos sin procesar (se versionan solo los masters optimizados)
+assets-src/
+
+# Entorno y sistema
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+.vercel/
+
+# Estado local de Claude Code (las skills y settings.json del proyecto sí se versionan)
+.claude/settings.local.json
