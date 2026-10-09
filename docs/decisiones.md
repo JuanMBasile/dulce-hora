@@ -143,12 +143,12 @@ El plan nombra siete skills. Verifiqué cada una en disco; no me apoyo en ningun
 
 **Presupuesto:** el JS inicial pasó de 136,4 a 138,6 KB gz, con un límite de 140. Si la próxima sección lo excede, la escena se puede pasar a un chunk diferido (`React.lazy`), porque está debajo del pliegue.
 
-## Sucursales · buscador
+## Sucursales · buscador y sello
 
 Referencia: cómo muestra Vremont sus oficinas ([`referencia-vremont.md`](./referencia-vremont.md)). Los datos son un listado parcial a confirmar ([`datos-a-confirmar.md`](./datos-a-confirmar.md)).
 
-**Qué hace**
-- **Datos:** `app/data/branches.ts` arma el listado, los filtros por zona, los contadores y el tambor. Una zona sin sucursales no muestra filtro.
+**Buscador**
+- **Datos:** `app/data/branches.ts` arma el listado, los filtros por zona, los contadores, el tambor y el sello. Una zona sin sucursales no muestra filtro.
 - **Búsqueda** (`app/lib/branches.ts`, con tests):
   - Busca por barrio, calle, altura o ciudad, sin tildes ni mayúsculas. Todas las palabras tienen que aparecer.
   - Entiende alias ("recoleta" encuentra Barrio Norte), abreviaturas ("avenida" encuentra "Av.") y nombres pegados ("montecastro").
@@ -162,28 +162,46 @@ Referencia: cómo muestra Vremont sus oficinas ([`referencia-vremont.md`](./refe
   - "Cerca de mí, en Google Maps" deja que Maps ubique al visitante: no hacen falta coordenadas propias ni permisos.
 - **Sin resultados:** si la búsqueda aparece en otra zona, lo dice y ofrece verlas todas. Si no aparece en ninguna, ofrece borrarla y abrir una franquicia ("¿No hay un Dulce Hora en tu barrio?").
 - **Movimiento:**
-  - "Estamos en <barrio>": el tambor sube como el cartel de horarios del dial. Arranca en "tu barrio" (lo que trae el HTML) y, con la columna a la vista, recorre los barrios cada 2,4 s. Se detiene mientras se escribe y, con un filtro o una búsqueda, aterriza en lo que se muestra.
+  - "Estamos en <barrio>": el tambor sube como el cartel de horarios del dial. Arranca en "tu barrio" (lo que trae el HTML) y, mientras se ve, recorre los barrios cada 2,4 s. Se detiene mientras se escribe y, con un filtro o una búsqueda, aterriza en lo que se muestra.
   - Las cifras del contador son tiras de 0 a 9 dibujadas por CSS (`content`), así que no queda texto suelto en el HTML.
   - Al filtrar, las filas se deslizan desde donde estaban (FLIP con la Web Animations API sobre `transform`, `app/lib/flip.ts`) y el papel acompaña el cambio de alto.
   - Las filas aparecen con CSS scroll-driven (`view()`), como los valores de Historia.
   - Con movimiento reducido, no hay tambor, FLIP ni revelado: los cambios son instantáneos.
 - **Sin JavaScript:** el listado completo queda visible y agrupado. El buscador, los filtros y el tambor se ocultan con `@media (scripting: none)`.
 
-**Chunk diferido**
-- El JS inicial estaba en 138,6 KB de 140. El buscador (datos, búsqueda y movimiento, 5,7 KB gz) va en un chunk diferido con `React.lazy`.
-  - En la Home quedan solo la sección y su título (`Branches.tsx`).
-  - El buscador (`BranchFinder.tsx`) se hidrata cuando llega su chunk.
-- **`app/entry.server.tsx` propio.** El prerender no manda user-agent y la entrada por defecto usaba `onShellReady`. Además, React manda aparte todo límite de Suspense de más de 12 800 bytes (`progressiveChunkSize`), en un `<div hidden>` que solo JavaScript ubica. Sin JS, la sección no se veía.
+**Sello de sucursales** (`BranchConstellation.tsx`, `app/lib/constellation.ts` con tests)
+- **La idea de Vremont con la marca de Dulce Hora.** En el hero de Vremont, sus oficinas aparecen como puntos sobre una grilla y forman la V del logo. Acá las sucursales forman el festón del sello, con la ramita en el centro.
+- **Coreografía, una sola vez al entrar en pantalla (unos 3,5 s):**
+  1. Las sucursales aparecen dispersas sobre una grilla de puntos tenue, a lo largo de un segundo. Siete barrios se nombran: los que tienen más sucursales.
+  2. Los nombres se van. Las sucursales vuelan a su lugar con un resorte (0,75 s, rebote 0,18), en sentido horario como la aguja de un reloj. El resto del festón se enciende en su lugar con el mismo barrido.
+  3. Con el festón casi cerrado, la ramita se apoya en el centro.
+- **Motion:** `animateMini` sobre la Web Animations API. Los resortes se convierten a `linear()` y corren fuera del hilo principal. Solo se animan `transform` y `opacity`. Al terminar se borran los estilos en línea y vuelve a mandar el CSS.
+- **Principios de movimiento** (los de la skill de Emil Kowalski, que no está instalada en el entorno de la nube):
+  - Nada aparece desde `scale(0)`: los puntos, desde la mitad de su tamaño, y la ramita, desde 0,9.
+  - Todo entra con ease-out (quint). La salida de los nombres es más rápida que su entrada.
+  - Un resorte con rebote apenas visible.
+  - Una animación que se ve una vez puede ser expresiva. Lo que se repite (el resaltado) dura 320 ms.
+- **Dibujo:** el festón tiene al menos 8 puntos por onda y crece con las sucursales. En puntos, las ondas del sello real casi no se leían, así que son 2,2 veces más hondas.
+  - Se dispersan como mucho 36 sucursales, para que el escenario no se vuelva una trama.
+  - Los nombres van hacia el centro y ningún punto cae sobre ellos.
+  - Todo sale de un generador con semilla: el HTML y el cliente coinciden.
+- **Ya formado, acompaña al buscador:** con un filtro se encienden las sucursales que se muestran y se apaga el resto; cada zona ocupa un tramo del festón (Rosario, el izquierdo). Sin filtro, se encienden las del barrio que nombra el tambor.
+- **Sin JavaScript o con movimiento reducido:** el sello se ve ya formado. Es decorativo (`aria-hidden`): el listado y el estado tienen su propio texto.
+
+**Chunks diferidos**
+- **Historia y Sucursales van en chunks diferidos** con `React.lazy`, como preveía la nota de Historia: están debajo del pliegue. Historia pesa 2,4 KB gz y Sucursales, 10,4 KB gz con el sello y Motion `animateMini`.
+- **`app/entry.server.tsx` propio.** El prerender no manda user-agent y la entrada por defecto usaba `onShellReady`. Además, React manda aparte todo límite de Suspense de más de 12 800 bytes (`progressiveChunkSize`), en un `<div hidden>` que solo JavaScript ubica. Sin JS, las secciones no se veían.
   - Ahora el prerender espera todo (`onAllReady`) y no separa nada (`progressiveChunkSize: Infinity`).
   - `seo-nojs` verifica que el listado esté dentro de `<main>` y que no haya `<div hidden id="S:…">`.
-  - Esto también sirve para diferir Historia si la próxima sección lo necesita.
-- **`build.cssCodeSplit: false`.** Con el CSS partido por chunk, React Router solo enlaza el de los módulos que la ruta importa de forma estática. El CSS del buscador llegaba con su chunk: sin estilos hasta entonces, y sin JS, nunca.
-  - Tampoco alcanzaba con importar el CSS Module desde la Home: Vite marca los CSS Modules sin efectos secundarios y descarta ese import. Además, `?url` no está soportado con CSS Modules.
-  - Ahora hay una sola hoja enlazada en el HTML. Comprime mejor: 9,3 KB gz con la sección nueva incluida, contra 8,6 KB antes sin ella.
+- **`build.cssCodeSplit: false`.** Con el CSS partido por chunk, React Router solo enlaza el de los módulos que la ruta importa de forma estática. El CSS de una sección diferida llegaba con su chunk: sin estilos hasta entonces, y sin JS, nunca.
+  - No alcanza con importar el CSS Module desde la Home: Vite marca los CSS Modules sin efectos secundarios y descarta ese import. Además, `?url` no está soportado con CSS Modules.
+  - Ahora hay una sola hoja enlazada en el HTML: 9,7 KB gz con todo.
   - El orden de las reglas cambió. No hay conflictos: el CSS global va en `@layer` y ningún módulo redefine tokens de superficie sobre el mismo elemento que `.surface-*`.
   - Efecto lateral: React Router copia a `build/client/assets` el `style-*.css` del build del servidor, que no se enlaza. Es un archivo de más en el deploy, inofensivo.
-- **Probado y descartado:** agrupar los módulos compartidos con `codeSplitting.groups` de Rolldown subió el JS inicial a 140,2 KB.
+- **Probado y descartado:**
+  - Agrupar los módulos compartidos con `codeSplitting.groups` de Rolldown: subió el JS inicial a 140,2 KB.
+  - Una "cáscara" estática de Sucursales para enlazar su CSS: con una sola hoja ya no hace falta.
 
-**Presupuesto:** JS inicial 139,4 KB de 140 (antes 138,6), CSS 9,3 KB, HTML 19,8 KB. Rolldown crea chunks compartidos chicos (`clock`, `urls`) para lo que usan la Home y el buscador; eso explica los 0,8 KB. Para la próxima sección conviene diferir la escena de Historia (unos 2 KB).
+**Presupuesto:** JS inicial 138,1 KB de 140 (antes de esta sección, 138,6), CSS 9,7 KB y HTML 20,8 KB.
 
-**Validación:** tsc y eslint limpios; Vitest 32/32; build y presupuesto ok; Playwright 133 pasados y 5 omitidos a propósito, en m375, m390, t768, d1440 y no-js (`branches` nuevo; `seo-nojs` ampliado).
+**Validación:** tsc y eslint limpios; Vitest 41/41; build y presupuesto ok; Playwright 149 pasados y 5 omitidos a propósito, en m375, m390, t768, d1440 y no-js (`branches` nuevo, con el sello; `seo-nojs` ampliado). Historia sigue pasando su spec ya diferida.

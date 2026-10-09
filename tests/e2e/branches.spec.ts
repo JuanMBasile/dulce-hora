@@ -161,8 +161,97 @@ test("con movimiento, el tambor recorre los barrios y la lista se desliza al fil
   expect(flips).toBeGreaterThan(0);
 });
 
+// El sello: las sucursales aparecen dispersas y se acomodan en el festón.
+const stage = (page: Page) => section(page).locator('[class*="stage"]');
+const dots = (page: Page) => stage(page).locator("[data-dot]");
+const RING_POINTS = 12 * Math.max(8, Math.ceil(branches.length / 12));
+
+async function waitFormed(page: Page) {
+  await stage(page).scrollIntoViewIfNeeded();
+  await expect(stage(page)).toHaveAttribute("data-formed", { timeout: 8000 });
+}
+
+test("las sucursales aparecen dispersas, con sus barrios, y forman el sello", async ({ page }) => {
+  await open(page);
+  await expect(stage(page)).toHaveAttribute("aria-hidden", "true");
+  await expect(dots(page)).toHaveCount(RING_POINTS);
+  await stage(page).scrollIntoViewIfNeeded();
+  // Mientras están dispersas, algunos barrios se nombran.
+  await expect
+    .poll(() =>
+      stage(page)
+        .locator("[data-label]")
+        .evaluateAll((labels) => Math.max(...labels.map((label) => Number(getComputedStyle(label).opacity)))),
+    )
+    .toBeGreaterThan(0.9);
+
+  await waitFormed(page);
+  // Formado: cada punto en su lugar del festón, sin transformaciones, y los nombres ya no están.
+  const transforms = await dots(page).evaluateAll((elements) => [
+    ...new Set(elements.map((element) => getComputedStyle(element).transform)),
+  ]);
+  expect(transforms).toEqual(["none"]);
+  const opacities = await dots(page).evaluateAll((elements) =>
+    elements.map((element) => Number(getComputedStyle(element).opacity)),
+  );
+  expect(Math.min(...opacities)).toBe(1);
+  const labels = await stage(page)
+    .locator("[data-label]")
+    .evaluateAll((elements) => elements.map((element) => Number(getComputedStyle(element).opacity)));
+  expect(Math.max(...labels)).toBe(0);
+  expect(
+    await stage(page)
+      .locator("[data-sprig]")
+      .evaluate((sprig) => getComputedStyle(sprig).opacity),
+  ).toBe("1");
+});
+
+test("la búsqueda y los filtros encienden sus sucursales en el sello", async ({ page }) => {
+  await open(page);
+  await waitFormed(page);
+
+  await searchbox(page).fill("caballito");
+  await expect(stage(page).locator("[data-dot][data-lit]")).toHaveCount(5);
+  await expect(stage(page).locator("[data-dot][data-dim]")).toHaveCount(RING_POINTS - 5);
+
+  await searchbox(page).fill("");
+  await chip(page, /^Rosario/).click();
+  await expect(stage(page).locator("[data-dot][data-lit]")).toHaveCount(count("rosario"));
+
+  await chip(page, /^Todas/).click();
+  await expect(stage(page).locator("[data-dot][data-dim]")).toHaveCount(0);
+});
+
+test("sin filtro, el sello enciende las sucursales del barrio que nombra el tambor", async ({ page }) => {
+  await open(page);
+  await waitFormed(page);
+  await drumWord(page).scrollIntoViewIfNeeded();
+  await expect(drumWord(page)).not.toHaveText("tu barrio", { timeout: 5000 });
+  // Se leen juntos, en un mismo frame: el tambor puede girar entre dos lecturas.
+  const { area, lit } = await page.evaluate(() => ({
+    area: document.querySelector('#sucursales [class*="drumIn"]')?.textContent ?? "",
+    lit: document.querySelectorAll('#sucursales [class*="stage"] [data-dot][data-lit]').length,
+  }));
+  expect(lit).toBe(branches.filter((branch) => branch.area === area).length);
+});
+
 test.describe("con movimiento reducido", () => {
   test.use({ reducedMotion: "reduce" });
+
+  test("el sello aparece ya formado, sin coreografía", async ({ page }) => {
+    await open(page);
+    await stage(page).scrollIntoViewIfNeeded();
+    await expect(stage(page)).toHaveAttribute("data-formed");
+    const opacities = await dots(page).evaluateAll((elements) =>
+      elements.map((element) => Number(getComputedStyle(element).opacity)),
+    );
+    expect(Math.min(...opacities)).toBe(1);
+    const running = await stage(page).evaluate(
+      (element) =>
+        element.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
+    );
+    expect(running).toBe(0);
+  });
 
   test("el tambor queda quieto y los cambios son instantáneos", async ({ page }) => {
     await open(page);

@@ -181,12 +181,16 @@ test.describe("Página con JavaScript desactivado", () => {
     await page.goto("/");
     const section = page.locator("#historia");
     // Sin JS no hay escena fija: la sección mide lo que su contenido.
-    expect(await section.evaluate((element) => element.firstElementChild!.getBoundingClientRect().height)).toBeLessThan(1600);
+    expect(await section.evaluate((element) => element.firstElementChild!.getBoundingClientRect().height)).toBeLessThan(
+      1600,
+    );
     await expect(section.getByRole("heading", { level: 2, name: "Nuestra historia" })).toBeVisible();
     await expect(section.getByRole("img", { name: /Medialunas de manteca/ })).toBeVisible();
     await section.getByText(story.manifesto).scrollIntoViewIfNeeded();
     await expect(section.getByText(story.manifesto)).toBeVisible();
-    expect(await section.getByText(story.manifesto).evaluate((element) => getComputedStyle(element).color)).toBe("rgb(34, 20, 15)");
+    expect(await section.getByText(story.manifesto).evaluate((element) => getComputedStyle(element).color)).toBe(
+      "rgb(34, 20, 15)",
+    );
     for (const value of story.values) {
       await expect(section.getByRole("heading", { level: 4, name: value.name })).toBeVisible();
       await expect(section.getByText(value.text)).toBeVisible();
@@ -207,6 +211,21 @@ test.describe("Página con JavaScript desactivado", () => {
       await expect(link).toBeVisible();
     }
     await expect(section.getByRole("link", { name: /Cerca de mí, en Google Maps/ })).toBeVisible();
+
+    // El sello de sucursales se ve ya formado, sin los nombres de la coreografía.
+    const stage = section.locator('[class*="stage"]');
+    await stage.scrollIntoViewIfNeeded();
+    const dots = await stage
+      .locator("[data-dot]")
+      .evaluateAll((elements) => elements.map((element) => Number(getComputedStyle(element).opacity)));
+    expect(dots.length).toBeGreaterThanOrEqual(branches.length);
+    expect(Math.min(...dots)).toBe(1);
+    expect(
+      await stage
+        .locator("[data-label]")
+        .first()
+        .evaluate((label) => getComputedStyle(label).opacity),
+    ).toBe("0");
   });
 
   test("el pie trae la navegación y los contactos visibles", async ({ page }) => {
