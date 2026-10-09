@@ -20,6 +20,13 @@ export default defineConfig({
     // El año del © se fija en el build para no generar diferencias de hidratación.
     __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()),
   },
+  build: {
+    // Una sola hoja de estilos, enlazada en el HTML. Con el CSS partido por chunk, React
+    // Router solo enlaza el de los módulos que la ruta importa de forma estática: lo de
+    // una sección diferida (React.lazy) llegaría con su chunk, sin estilos hasta entonces
+    // y nunca sin JavaScript. Un solo archivo además comprime mejor.
+    cssCodeSplit: false,
+  },
   plugins: [
     imagetools({
       defaultDirectives: (url) => {

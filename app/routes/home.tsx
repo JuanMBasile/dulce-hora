@@ -1,11 +1,18 @@
+import { lazy, Suspense } from "react";
 import { sections, site } from "~/data/site";
 import { organizationJsonLd } from "~/lib/seo";
 import { Hero } from "~/sections/Hero/Hero";
 import { ProductMarquee } from "~/sections/Marquee/ProductMarquee";
 import { Products } from "~/sections/Products/Products";
-import { Story } from "~/sections/Story/Story";
 import type { Route } from "./+types/home";
 import styles from "./home.module.css";
+
+// Historia y Sucursales están debajo del pliegue y van en chunks diferidos: el JS inicial
+// queda dentro del presupuesto. El prerender los espera (app/entry.server.tsx), así que el
+// HTML trae las dos secciones completas; en el navegador se hidratan cuando llega su chunk.
+// Su CSS ya está en la hoja única (vite.config.ts).
+const Story = lazy(() => import("~/sections/Story/Story").then((module) => ({ default: module.Story })));
+const Branches = lazy(() => import("~/sections/Branches/Branches").then((module) => ({ default: module.Branches })));
 
 export const links: Route.LinksFunction = () => [{ rel: "canonical", href: `${site.url}/` }];
 
@@ -31,21 +38,13 @@ export default function Home() {
 
       <Products />
 
-      <Story />
+      <Suspense fallback={null}>
+        <Story />
+      </Suspense>
 
-      <section
-        id={sections.sucursales}
-        tabIndex={-1}
-        className={`surface-rojo festoon-top ${styles.section} ${styles.colored}`}
-        aria-labelledby="sucursales-titulo"
-      >
-        <div className="page-width">
-          <h2 id="sucursales-titulo" className={styles.heading}>
-            Panaderías cerca de casa
-          </h2>
-          <p className={styles.intro}>{site.reach}</p>
-        </div>
-      </section>
+      <Suspense fallback={null}>
+        <Branches />
+      </Suspense>
 
       <section
         id={sections.franquicias}

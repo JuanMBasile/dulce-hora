@@ -1,0 +1,119 @@
+/* "Las sucursales forman el sello" (BranchConstellation.tsx). Sobre una grilla de puntos
+   tenue, las sucursales aparecen dispersas y se acomodan en el festón del sello. Sin
+   JavaScript o con movimiento reducido, el sello se ve ya formado. */
+
+/* El escenario es un contenedor: el sello y los puntos se miden con su tamaño. */
+.stage {
+  --ring: min(86cqh, 86cqw);
+  --dot: calc(var(--ring) * 0.022);
+  position: relative;
+  container-type: size;
+  aspect-ratio: 1;
+  overflow: clip;
+}
+
+/* La grilla de una vidriera de puntos, desvanecida hacia los bordes. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.13) 0 1.75px, transparent 2.25px) center / 1.125rem 1.125rem;
+  mask-image: radial-gradient(closest-side, #000 40%, transparent);
+  pointer-events: none;
+}
+
+/* El sello ocupa un cuadrado centrado: el festón queda redondo aunque el escenario no lo sea. */
+.ring {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: var(--ring);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+
+/* `translate` centra el punto, Motion usa `transform` y el resaltado, `scale`: tres
+   propiedades que se suman sin pisarse. */
+.dot {
+  position: absolute;
+  width: var(--dot);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--harina);
+  translate: -50% -50%;
+  transition:
+    scale 320ms var(--ease-out-quart),
+    background-color 320ms var(--ease-out-quart),
+    box-shadow 320ms var(--ease-out-quart);
+}
+
+/* Ya formado, el sello acompaña al buscador: se encienden unas sucursales y se apaga el resto. */
+.stage[data-formed] .dot[data-lit] {
+  scale: 1.9;
+  box-shadow: 0 0 0 calc(var(--dot) * 0.45) rgb(255 255 255 / 0.22);
+}
+
+.stage[data-formed] .dot[data-dim] {
+  background: rgb(255 255 255 / 0.3);
+}
+
+.sprig {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: 34%;
+  translate: -50% -46%;
+  fill: var(--harina);
+}
+
+/* Barrios que se nombran mientras los puntos están dispersos. El texto va hacia el
+   centro del escenario: del punto grande (el doble de --dot) más un respiro. */
+.label {
+  position: absolute;
+  font-family: var(--font-ui);
+  font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.9375rem);
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.label[data-side="end"] {
+  translate: calc(var(--dot) + 0.45rem) -50%;
+}
+
+.label[data-side="start"] {
+  translate: calc(-100% - var(--dot) - 0.45rem) -50%;
+}
+
+/* En un escenario angosto se nombran menos barrios, para que no se pisen. */
+@container (max-width: 34rem) {
+  .label[data-minor] {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .stage {
+    grid-area: stage;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+/* Con JavaScript y movimiento, el sello arranca vacío y la coreografía lo arma cuando
+   entra en pantalla. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .stage:not([data-formed]) .dot,
+  .stage:not([data-formed]) .sprig {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}
