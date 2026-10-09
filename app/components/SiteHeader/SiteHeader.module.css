@@ -1,0 +1,141 @@
+/* El centinela marca los primeros píxeles de la página: cuando sale de vista,
+   el header pasa a su estado compacto. */
+.sentinel {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1.5rem;
+  pointer-events: none;
+}
+
+.header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 50;
+  background: var(--harina);
+  transition: box-shadow var(--dur-ui) var(--ease-out-quart);
+}
+
+.header[data-compact] {
+  box-shadow:
+    0 1px 0 var(--linea),
+    0 12px 28px -20px rgb(34 20 15 / 0.45);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  min-height: var(--header-h);
+}
+
+.brand {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-inline-end: auto;
+  border-radius: var(--radius-s);
+}
+
+.signature {
+  width: auto;
+  height: 2.5rem;
+  transform-origin: left center;
+  transition: scale var(--dur-ui) var(--ease-out-quart);
+}
+
+.header[data-compact] .signature {
+  scale: 0.9;
+}
+
+/* Móvil con JS: el menú vive en el diálogo. `.bar >` le gana al display
+   del CSS de ButtonLink, que se carga en otro archivo. */
+.bar > .nav,
+.bar > .cta {
+  display: none;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3xs) var(--space-l);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  font-weight: 650;
+  letter-spacing: var(--tracking-ui);
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 calc(100% - 0.7rem) / 0 2px;
+  transition: background-size var(--dur-ui) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .link:hover {
+    background-size: 100% 2px;
+  }
+}
+
+.link:focus-visible {
+  border-radius: var(--radius-s);
+}
+
+@media (min-width: 64rem) {
+  .bar > .nav {
+    display: block;
+  }
+
+  .bar > .cta {
+    display: inline-flex;
+  }
+
+  .bar > .toggle {
+    display: none;
+  }
+
+  .signature {
+    height: 2.875rem;
+  }
+}
+
+/* Sin JavaScript el diálogo no puede abrirse: la navegación queda visible
+   como una lista debajo de la firma y el botón de menú se oculta. */
+@media (scripting: none) {
+  .bar > .toggle {
+    display: none;
+  }
+
+  .bar > .nav {
+    display: block;
+  }
+}
+
+@media (scripting: none) and (max-width: 63.999rem) {
+  .bar {
+    flex-wrap: wrap;
+    row-gap: 0;
+    padding-block: var(--space-2xs) var(--space-3xs);
+  }
+
+  .bar > .nav {
+    flex-basis: 100%;
+  }
+
+  .links {
+    column-gap: 0.875rem;
+  }
+
+  .link {
+    font-size: var(--step--1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .signature,
+  .link {
+    transition: none;
+  }
+}

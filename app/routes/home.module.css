@@ -1,0 +1,22 @@
+/* Estructura provisoria de la Home (M2). Cada sección se reemplaza por su
+   componente definitivo en los hitos siguientes. */
+.section {
+  padding-block: var(--section-y);
+}
+
+.colored {
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.heading {
+  max-width: 16ch;
+  font-size: var(--step-3);
+}
+
+.intro {
+  max-width: var(--measure);
+  margin-block-start: var(--space-m);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}

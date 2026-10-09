@@ -1,0 +1,63 @@
+.band {
+  position: relative;
+  z-index: 2;
+  padding-block: var(--space-m) var(--space-m);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+/* El recorte va en un contenedor interno: el festón asoma por encima de la banda. */
+.viewport {
+  overflow: clip;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+}
+
+.group {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  padding-inline-end: 0.45em;
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  white-space: nowrap;
+}
+
+.sprig {
+  width: 0.62em;
+  height: auto;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+/* Corre siempre hacia la izquierda, lineal, como un cartel. Se detiene si el cursor
+   se apoya encima, para poder leer. Sin movimiento, queda quieto y recortado. */
+@media (prefers-reduced-motion: no-preference) {
+  .track {
+    animation: marquee 55s linear infinite;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .band:hover .track {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes marquee {
+  to {
+    translate: -50% 0;
+  }
+}

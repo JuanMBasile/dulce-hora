@@ -16,7 +16,8 @@
     "budget": "node scripts/check-budget.mjs",
     "lh": "node scripts/lighthouse.mjs",
     "photos": "node scripts/prepare-photos.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run budget && npm run e2e"
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run budget && npm run e2e",
+    "static": "node scripts/build-static.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "5.3.0",

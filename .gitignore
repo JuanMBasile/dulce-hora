@@ -17,6 +17,7 @@ coverage/
 assets-src/
 
 # Entorno y sistema
+.venv-brand/
 .env
 .env.*
 !.env.example
@@ -27,3 +28,6 @@ Thumbs.db
 
 # Estado local de Claude Code (las skills y settings.json del proyecto sí se versionan)
 .claude/settings.local.json
+
+# Caché del hook de diseño (impeccable); la configuración sí se versiona
+.impeccable/hook.cache.json

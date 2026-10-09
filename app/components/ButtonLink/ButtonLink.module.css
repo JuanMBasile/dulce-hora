@@ -1,0 +1,83 @@
+.button {
+  --button-bg: var(--rojo);
+  --button-ink: var(--harina);
+  --button-border: var(--rojo);
+  --button-bg-hover: var(--rojo-horno);
+  --button-ink-hover: var(--harina);
+  --button-border-hover: var(--rojo-horno);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: var(--tap);
+  padding: 0.5rem 1.5rem;
+  border: 2px solid var(--button-border);
+  border-radius: var(--radius-pill);
+  background: var(--button-bg);
+  color: var(--button-ink);
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-hover) var(--ease-out-quart),
+    border-color var(--dur-hover) var(--ease-out-quart),
+    color var(--dur-hover) var(--ease-out-quart),
+    scale var(--dur-press) var(--ease-out-quart);
+}
+
+.button[data-variant="secondary"] {
+  --button-bg: transparent;
+  --button-ink: var(--tinta);
+  --button-border: currentColor;
+  --button-bg-hover: var(--tinta);
+  --button-ink-hover: var(--superficie);
+  --button-border-hover: var(--tinta);
+}
+
+.button[data-variant="inverse"] {
+  --button-bg: var(--harina);
+  --button-ink: var(--rojo);
+  --button-border: var(--harina);
+  --button-bg-hover: var(--tostado);
+  --button-ink-hover: var(--harina);
+  --button-border-hover: var(--tostado);
+}
+
+.button[data-variant="almibar"] {
+  --button-bg: var(--almibar);
+  --button-ink: var(--tostado);
+  --button-border: var(--almibar);
+  --button-bg-hover: var(--harina);
+  --button-ink-hover: var(--tostado);
+  --button-border-hover: var(--harina);
+}
+
+@media (hover: hover) {
+  .button:hover {
+    background: var(--button-bg-hover);
+    border-color: var(--button-border-hover);
+    color: var(--button-ink-hover);
+  }
+}
+
+.button:active {
+  scale: 0.97;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active {
+    scale: none;
+  }
+}

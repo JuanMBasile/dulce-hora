@@ -8,6 +8,8 @@ const PRESETS: Record<string, Record<string, string>> = {
   hero: { w: "480;640;828;1080;1440;1920;2400", format: FORMATS, as: "picture" },
   feature: { w: "480;640;828;1080;1440", format: FORMATS, as: "picture" },
   thumb: { w: "320;480;640", format: FORMATS, as: "picture" },
+  // Recorte cuadrado para la esfera del dial de productos (los originales tienen 1080 px de alto).
+  plate: { w: "320;480;720;960", aspect: "1:1", fit: "cover", format: FORMATS, as: "picture" },
 };
 
 export default defineConfig({

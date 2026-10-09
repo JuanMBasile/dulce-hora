@@ -1,0 +1,50 @@
+/* Tipografías alojadas en el sitio. Son subsets OFL generados con
+   scripts/brand/subset-fonts.py: solo español y puntuación tipográfica. */
+
+/* Bricolage Grotesque, corte óptico 96: titulares, navegación y botones. Se precarga. */
+@font-face {
+  font-family: "Bricolage Grotesque DH";
+  src: url("../assets/fonts/bricolage-grotesque-dh.woff2") format("woff2");
+  font-weight: 500 800;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Newsreader con tamaño óptico 16–72: texto de lectura y citas. */
+@font-face {
+  font-family: "Newsreader DH";
+  src: url("../assets/fonts/newsreader-dh.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Fallbacks con métricas ajustadas (calculadas por subset-fonts.py contra Arial y
+   Georgia): el cambio a la fuente web no mueve el layout. */
+@font-face {
+  font-family: "Bricolage UI Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Roboto");
+  size-adjust: 95.78%;
+  ascent-override: 97.1%;
+  descent-override: 28.19%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Bricolage Display Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Roboto");
+  size-adjust: 72.61%;
+  ascent-override: 128.09%;
+  descent-override: 37.19%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Georgia"), local("Times New Roman"), local("Noto Serif");
+  size-adjust: 91.44%;
+  ascent-override: 80.38%;
+  descent-override: 28.98%;
+  line-gap-override: 0%;
+}

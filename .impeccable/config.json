@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.5, 0.64, 1)",
+        "createdAt": "2026-10-09T02:47:31.931Z",
+        "reason": "Plan aprobado por el usuario (sección 5): el sello se estampa con un leve rebote, como un sticker; único uso, en el hero"
+      }
+    ]
+  }
+}

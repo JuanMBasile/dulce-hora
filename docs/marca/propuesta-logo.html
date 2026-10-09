@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sello Dulce Hora · propuesta</title>
+<!-- Lámina de revisión del logo (M2). Abrir directo en el navegador: usa solo archivos de esta carpeta.
+     Los SVG de svg/ se regeneran con `npm run static -- --sheet`. -->
+<style>
+  :root {
+    --rojo: #d50d17;
+    --tostado: #22140f;
+    --tostado-suave: #6b5a52;
+    --harina: #fff;
+    --linea: rgb(34 20 15 / 0.14);
+    --almibar: #f2b33d;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--harina);
+    color: var(--tostado);
+    font: 16px/1.55 "Segoe UI", system-ui, sans-serif;
+    padding: 48px 16px 80px;
+  }
+  img { display: block; max-width: 100%; height: auto; }
+  .page { max-width: 1180px; margin-inline: auto; display: grid; gap: 56px; }
+  header { display: grid; gap: 12px; max-width: 760px; }
+  .estado {
+    justify-self: start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--almibar);
+    color: var(--tostado);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  h1 { font: 700 clamp(32px, 5vw, 52px)/1.05 Georgia, serif; letter-spacing: -0.01em; }
+  h2 { font: 700 24px/1.2 Georgia, serif; }
+  p { max-width: 68ch; }
+  .muted { color: var(--tostado-suave); }
+  section { display: grid; gap: 20px; }
+  .card { background: var(--harina); border: 1px solid var(--linea); border-radius: 20px; padding: 28px; }
+
+  /* Antes y después */
+  .compare { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+  .compare figure { display: grid; gap: 16px; justify-items: center; }
+  .compare img { width: min(100%, 360px); }
+  figcaption { font-size: 14px; font-weight: 600; color: var(--tostado-suave); text-align: center; }
+
+  /* Prueba de reducción */
+  .scale { display: grid; gap: 12px; }
+  .scale-row { display: grid; grid-template-columns: 120px 1fr; align-items: end; gap: 16px; padding-block: 12px; border-top: 1px solid var(--linea); }
+  .scale-row:first-child { border-top: 0; }
+  .scale-row strong { font-size: 14px; align-self: center; }
+  @media (max-width: 640px) { .scale-row { grid-template-columns: 1fr; } .card { padding: 20px; } .sizes { gap: 18px; } }
+  .sizes { display: flex; flex-wrap: wrap; align-items: end; gap: 28px; }
+  .sizes figure { display: grid; gap: 6px; justify-items: center; }
+  .sizes figcaption { font-size: 12px; font-weight: 500; }
+
+  /* Fondos */
+  .grounds { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+  .ground { border-radius: 20px; padding: 32px 28px; display: grid; gap: 28px; justify-items: start; min-height: 360px; }
+  .ground.harina { background: var(--harina); border: 1px solid var(--linea); }
+  .ground.rojo { background: var(--rojo); color: var(--harina); }
+  .ground.tostado { background: var(--tostado); color: var(--harina); }
+  .ground .firma { width: 220px; }
+  .ground .sello { width: 180px; }
+  .ground p { font-size: 14px; opacity: 0.85; }
+
+  /* Sistema */
+  .system { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); }
+  .system .card { display: grid; gap: 16px; align-content: start; }
+  .system .art { display: grid; place-items: center; min-height: 200px; border: 1px solid var(--linea); border-radius: 12px; padding: 20px; }
+  .system h3 { font-size: 16px; }
+  .system p { font-size: 14px; }
+  /* Los íconos ocupan una fila entera, en horizontal, para no dejar una tarjeta huérfana. */
+  .system .wide { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  .system .wide .art { grid-row: span 2; min-height: 160px; }
+  .system .wide h3 { align-self: end; }
+  .system .wide p { align-self: start; }
+  .system .art.icons { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 24px; }
+  @media (max-width: 640px) { .system .wide { grid-template-columns: 1fr; } .system .wide .art { grid-row: auto; } }
+  .icons img { border-radius: 8px; }
+  .icons .maskable { border-radius: 50%; }
+
+  /* Texto */
+  .notes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+  .notes ul { padding-left: 20px; display: grid; gap: 8px; }
+  .notes h3 { margin-bottom: 12px; font-size: 17px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span class="estado">Provisional · pendiente de aprobación</span>
+    <h1>El sello de Dulce Hora, redibujado</h1>
+    <p class="muted">Evolución del sello rojo vigente para que funcione desde un favicon de 16&nbsp;px hasta un cartel. Conserva la ramita, el arco rojo y el borde ondulado; ordena todo lo demás. Mientras no lo apruebes, el sitio lo usa como identidad provisional.</p>
+  </header>
+
+  <section>
+    <h2>Antes y después</h2>
+    <div class="compare">
+      <figure class="card">
+        <img src="ref/sello-actual.png" alt="Sello actual de Dulce Hora" width="400" height="410">
+        <figcaption>Actual: PNG de 534&nbsp;px dentro de un SVG de 323&nbsp;KB</figcaption>
+      </figure>
+      <figure class="card">
+        <img src="svg/sello.svg" alt="Sello propuesto de Dulce Hora" width="400" height="400">
+        <figcaption>Propuesta: vector real, 19&nbsp;KB, letras convertidas a curvas</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Prueba de reducción</h2>
+    <p class="muted">Los mismos archivos achicados por el navegador. A 32&nbsp;px y menos el sello completo deja de leerse en cualquier versión: ahí entra el isotipo, que es el favicon.</p>
+    <div class="card scale">
+      <div class="scale-row">
+        <strong>Actual</strong>
+        <div class="sizes">
+          <figure><img src="ref/sello-actual.png" alt="" width="128" height="131"><figcaption>128</figcaption></figure>
+          <figure><img src="ref/sello-actual.png" alt="" width="64" height="66"><figcaption>64</figcaption></figure>
+          <figure><img src="ref/sello-actual.png" alt="" width="32" height="33"><figcaption>32</figcaption></figure>
+          <figure><img src="ref/sello-actual.png" alt="" width="16" height="16"><figcaption>16</figcaption></figure>
+        </div>
+      </div>
+      <div class="scale-row">
+        <strong>Sello propuesto</strong>
+        <div class="sizes">
+          <figure><img src="svg/sello.svg" alt="" width="128" height="128"><figcaption>128</figcaption></figure>
+          <figure><img src="svg/sello.svg" alt="" width="64" height="64"><figcaption>64</figcaption></figure>
+          <figure><img src="svg/sello.svg" alt="" width="32" height="32"><figcaption>32</figcaption></figure>
+          <figure><img src="svg/sello.svg" alt="" width="16" height="16"><figcaption>16</figcaption></figure>
+        </div>
+      </div>
+      <div class="scale-row">
+        <strong>Isotipo (favicon)</strong>
+        <div class="sizes">
+          <figure><img src="svg/isotipo.svg" alt="" width="128" height="128"><figcaption>128</figcaption></figure>
+          <figure><img src="svg/isotipo.svg" alt="" width="64" height="64"><figcaption>64</figcaption></figure>
+          <figure><img src="svg/isotipo.svg" alt="" width="32" height="32"><figcaption>32</figcaption></figure>
+          <figure><img src="svg/isotipo.svg" alt="" width="16" height="16"><figcaption>16</figcaption></figure>
+        </div>
+      </div>
+      <div class="scale-row">
+        <strong>Firma (header)</strong>
+        <div class="sizes">
+          <figure><img src="svg/firma.svg" alt="" width="240" height="96"><figcaption>96 de alto</figcaption></figure>
+          <figure><img src="svg/firma.svg" alt="" width="115" height="46"><figcaption>46, escritorio</figcaption></figure>
+          <figure><img src="svg/firma.svg" alt="" width="100" height="40"><figcaption>40, móvil</figcaption></figure>
+          <figure><img src="svg/firma.svg" alt="" width="60" height="24"><figcaption>24</figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sobre los tres fondos de la marca</h2>
+    <div class="grounds">
+      <div class="ground harina">
+        <img class="firma" src="svg/firma.svg" alt="" width="120" height="48">
+        <img class="sello" src="svg/sello.svg" alt="" width="400" height="400">
+        <p>Harina: el fondo dominante. Festones en Tostado.</p>
+      </div>
+      <div class="ground rojo">
+        <img class="firma" src="svg/firma-sobre-rojo.svg" alt="" width="120" height="48">
+        <img class="sello" src="svg/sello.svg" alt="" width="400" height="400">
+        <p>Rojo: la firma pasa a Harina; el sello se apoya entero, como un sticker.</p>
+      </div>
+      <div class="ground tostado">
+        <img class="firma" src="svg/firma-sobre-tostado.svg" alt="" width="120" height="48">
+        <img class="sello" src="svg/sello-sobre-oscuro.svg" alt="" width="400" height="400">
+        <p>Tostado: los festones pasan a Rojo para que el borde no se pierda.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>El sistema</h2>
+    <div class="system">
+      <div class="card">
+        <div class="art"><img src="svg/sello.svg" alt="" width="160" height="160"></div>
+        <h3>Sello</h3>
+        <p class="muted">La pieza principal. Hero, pie de página, packaging. Desde 64&nbsp;px.</p>
+      </div>
+      <div class="card">
+        <div class="art"><img src="svg/firma.svg" alt="" width="200" height="80"></div>
+        <h3>Firma horizontal</h3>
+        <p class="muted">Isotipo + DULCE HORA a lo ancho. Header, menú, documentos.</p>
+      </div>
+      <div class="card">
+        <div class="art"><img src="svg/isotipo.svg" alt="" width="110" height="110"></div>
+        <h3>Isotipo</h3>
+        <p class="muted">Festones y ramita. Favicon, avatar, detalles chicos.</p>
+      </div>
+      <div class="card">
+        <div class="art"><img src="svg/monograma.svg" alt="" width="110" height="110"></div>
+        <h3>Monograma DH (alternativa)</h3>
+        <p class="muted">Variante del isotipo con iniciales. Hoy no se usa; queda a tu elección.</p>
+      </div>
+      <div class="card wide">
+        <div class="art icons">
+          <img src="../../public/icon-512.png" alt="" width="72" height="72">
+          <img class="maskable" src="../../public/icon-maskable-512.png" alt="" width="72" height="72">
+          <img src="../../public/apple-touch-icon.png" alt="" width="60" height="60">
+          <img src="../../public/favicon.svg" alt="" width="32" height="32">
+        </div>
+        <h3>Íconos de la app y favicon</h3>
+        <p class="muted">512 y 192 para Android, maskable sobre Rojo, 180 para iOS, SVG e ICO&nbsp;32.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="card">
+      <h3>Qué cambia</h3>
+      <ul>
+        <li>El borde ondulado irregular pasa a <strong>12 festones regulares</strong>: las horas del reloj, la docena de facturas.</li>
+        <li>El arco rojo interior queda abierto entre las 4:30 y las 7:30, como la esfera de un reloj; en la web se dibuja al cargar.</li>
+        <li><strong>DULCE</strong> deja la letra a mano por Bricolage Grotesque condensada y gruesa, con kerning ajustado. <strong>HORA</strong> va ancha y espaciada, en Rojo.</li>
+        <li>El descriptor gana tildes y un ampersand rojo: <em>Panadería &amp; Pastelería</em>, en Newsreader itálica.</li>
+        <li>Salen el abanico de rayos y los dos puntos, que a tamaño chico se vuelven ruido.</li>
+        <li>Todo es vector real: un solo juego de archivos genera el sitio, los favicons y la 404.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Qué se conserva</h3>
+      <ul>
+        <li>El sello redondo con borde ondulado en Tostado, como la blonda de una bandeja.</li>
+        <li>La ramita roja de tres hojas, ahora con nervaduras blancas.</li>
+        <li>El arco rojo interior.</li>
+        <li>La jerarquía DULCE (grande, oscuro) sobre HORA (rojo).</li>
+        <li>El rojo exacto del logo, #D50D17, que pasa a ser el rojo de toda la web.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Para decidir con la marca</h3>
+      <ul>
+        <li>Aprobar el sello o pedir ajustes. Hasta entonces es provisional.</li>
+        <li>Isotipo con ramita o monograma DH para el favicon.</li>
+        <li>Si existen los vectoriales originales, compararlos antes de cerrar.</li>
+        <li>Letra de DULCE: condensada geométrica (propuesta) o una más caligráfica, más cerca de la actual.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+/* Tokens de diseño de Dulce Hora. Es el único lugar donde viven colores, tipos,
+   espacios y tiempos; los componentes solo usan estas variables. */
+
+:root {
+  /* ---------- Color ---------- */
+  --rojo: #d50d17; /* rojo del logo; con Harina da 5,4:1 */
+  --rojo-horno: #a80a12; /* hover y pressed */
+  --tostado: #22140f; /* tinta: el casi-negro cálido del sello */
+  --harina: #ffffff;
+  --almibar: #f2b33d; /* acento puntual, solo sobre Tostado (9,6:1) */
+
+  /* Neutros derivados del Tostado (sin grises fríos). */
+  --tostado-suave: #6b5a52; /* texto secundario sobre Harina: 6,5:1 */
+  --linea: rgb(34 20 15 / 0.14);
+  --linea-fuerte: rgb(34 20 15 / 0.28);
+  --velo: rgb(34 20 15 / 0.5);
+
+  /* Superficie actual: los bloques Rojo y Tostado la redefinen. */
+  --superficie: var(--harina);
+  --tinta: var(--tostado);
+  --tinta-suave: var(--tostado-suave);
+  --foco: var(--tostado);
+
+  /* ---------- Tipografía ---------- */
+  --font-display: "Bricolage Grotesque DH", "Bricolage Display Fallback", "Arial Narrow", sans-serif;
+  --font-ui: "Bricolage Grotesque DH", "Bricolage UI Fallback", system-ui, sans-serif;
+  --font-text: "Newsreader DH", "Newsreader Fallback", Georgia, serif;
+
+  /* Escala fluida entre 360 px y 1440 px (Bringhurst: 14·17·21·28·36·48·72·120). */
+  --step--1: clamp(0.875rem, 0.85rem + 0.11vw, 0.9375rem);
+  --step-0: clamp(1.0625rem, 1.02rem + 0.19vw, 1.1875rem);
+  --step-1: clamp(1.25rem, 1.15rem + 0.45vw, 1.5rem);
+  --step-2: clamp(1.5rem, 1.25rem + 1.1vw, 2.25rem);
+  --step-3: clamp(2.25rem, 1.6rem + 2.9vw, 4.25rem);
+  --step-4: clamp(3rem, 1.45rem + 6.9vw, 7.5rem);
+
+  --tracking-ui: 0.018em; /* el corte óptico 96 necesita aire en tamaños de interfaz */
+  --tracking-display: -0.012em;
+
+  /* ---------- Espacio y layout ---------- */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2rem;
+  --space-xl: clamp(2.5rem, 2rem + 2vw, 4rem);
+  --space-2xl: clamp(3.5rem, 2.5rem + 4vw, 6.5rem);
+  --section-y: clamp(4.5rem, 3rem + 6.5vw, 9.5rem);
+
+  --page-max: 88rem;
+  --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.75rem);
+  --measure: 62ch;
+
+  --header-h: 4rem;
+  --tap: 3rem; /* objetivo táctil mínimo: 48 px */
+
+  --radius-s: 0.375rem;
+  --radius-m: 0.75rem;
+  --radius-pill: 999px;
+
+  /* ---------- Movimiento ---------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-stamp: cubic-bezier(0.34, 1.5, 0.64, 1); /* estampado con leve rebote */
+
+  --dur-press: 120ms;
+  --dur-hover: 200ms;
+  --dur-ui: 320ms;
+  --dur-reveal: 900ms;
+  --dur-hero: 1600ms;
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --header-h: 4.75rem;
+  }
+}
+
+/* Superficies de color: cada bloque redefine tinta y foco para mantener el contraste. */
+.surface-rojo {
+  --superficie: var(--rojo);
+  --tinta: var(--harina);
+  --tinta-suave: rgb(255 255 255 / 0.86);
+  --linea: rgb(255 255 255 / 0.28);
+  --foco: var(--harina);
+}
+
+.surface-tostado {
+  --superficie: var(--tostado);
+  --tinta: var(--harina);
+  --tinta-suave: rgb(255 255 255 / 0.78);
+  --linea: rgb(255 255 255 / 0.18);
+  --foco: var(--almibar);
+}

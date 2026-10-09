@@ -14,4 +14,9 @@ declare module "*?preset=thumb" {
   export default picture;
 }
 
+declare module "*?preset=plate" {
+  const picture: ImgPicture;
+  export default picture;
+}
+
 declare const __BUILD_YEAR__: number;

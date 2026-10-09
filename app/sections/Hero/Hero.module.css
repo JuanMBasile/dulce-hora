@@ -1,0 +1,350 @@
+/* Hero "Abrimos". Toda la entrada es CSS: corre antes de hidratar, aunque el JS
+   tarde, y la foto es visible desde el primer frame (solo cambia su escala). */
+
+.hero {
+  --festoon-r: clamp(0.85rem, 0.55rem + 1vw, 1.4rem);
+  position: relative;
+  display: grid;
+  overflow: clip;
+}
+
+/* ---------- Texto ---------- */
+.copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  padding: var(--space-xl) var(--gutter) calc(var(--space-2xl) + var(--festoon-r));
+}
+
+.title {
+  max-width: 10ch;
+  font-size: clamp(3.5rem, 1.9rem + 6.9vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.018em;
+}
+
+/* Cada palabra sube desde atrás de una máscara, con una leve inclinación que se endereza. */
+.word {
+  display: inline-block;
+  overflow: clip;
+  padding-block: 0.04em 0.14em;
+  margin-block: -0.04em -0.14em;
+  vertical-align: top;
+}
+
+.wordInner {
+  display: inline-block;
+  transform-origin: 0 100%;
+  animation: rise 950ms var(--ease-out-expo) both;
+  animation-delay: calc(90ms + var(--i, 0) * 55ms);
+}
+
+.wordInner[data-accent] {
+  color: var(--rojo);
+}
+
+.lead {
+  max-width: 30rem;
+  margin-block-start: var(--space-m);
+  font-size: var(--step-1);
+  line-height: 1.42;
+  animation: lift 800ms var(--ease-out-expo) 480ms both;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-l);
+  animation: lift 800ms var(--ease-out-expo) 580ms both;
+}
+
+.reach {
+  margin-block-start: var(--space-m);
+  color: var(--tinta-suave);
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  letter-spacing: var(--tracking-ui);
+  animation: lift 800ms var(--ease-out-expo) 680ms both;
+}
+
+/* ---------- Foto ---------- */
+.visual {
+  position: relative;
+  min-height: clamp(21rem, 105vw, 36rem);
+}
+
+/* El marco recorta la foto; el sello y el reloj quedan afuera para poder asomar. */
+.photoFrame {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+}
+
+/* El riel es más alto que el área visible: el scroll lo desplaza hacia abajo
+   (parallax) sin dejar ver el borde superior. */
+.photoTrack {
+  position: absolute;
+  inset: -16% 0 0;
+}
+
+.photo,
+.photoImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.photoImg {
+  object-fit: cover;
+  object-position: 42% 50%;
+  animation: settle var(--dur-hero) var(--ease-out-expo) both;
+}
+
+/* Costura festoneada entre texto y foto: el borde del sello, como una blonda. */
+.visual::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: -1px 0 auto;
+  height: calc(var(--festoon-r) + 1px);
+  background: radial-gradient(circle at 50% 0, var(--harina) calc(var(--festoon-r) - 0.5px), transparent var(--festoon-r))
+    50% 0 / calc(var(--festoon-r) * 2) 100% repeat-x;
+  pointer-events: none;
+}
+
+/* ---------- Sello estampado ---------- */
+.stamp {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 0;
+  inset-inline-end: var(--gutter);
+  width: clamp(8.5rem, 5.5rem + 10vw, 14.5rem);
+  translate: 0 -58%;
+  rotate: -8deg;
+  animation: stamp 820ms var(--ease-stamp) 460ms both;
+}
+
+/* Sombra circular aparte: el sello gira con el scroll y la sombra no necesita repintarse. */
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow:
+    0 18px 30px -10px rgb(34 20 15 / 0.45),
+    0 4px 10px -4px rgb(34 20 15 / 0.3);
+}
+
+.stampTurn {
+  position: relative;
+}
+
+.seal {
+  width: 100%;
+  height: auto;
+}
+
+/* El arco rojo se dibuja como una aguja que da la vuelta. */
+.arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1.01;
+  animation: draw 1150ms var(--ease-in-out) 980ms both;
+}
+
+/* ---------- Reloj con la hora del visitante ---------- */
+.clock {
+  position: absolute;
+  z-index: 3;
+  inset-block-end: var(--space-m);
+  inset-inline-start: var(--gutter);
+}
+
+.clockTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.5rem 1.15rem 0.5rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--harina);
+  color: var(--tostado);
+  text-decoration: none;
+  box-shadow: 0 14px 34px -14px rgb(34 20 15 / 0.55);
+  transition:
+    opacity 600ms var(--ease-out-expo),
+    translate 600ms var(--ease-out-expo),
+    scale var(--dur-press) var(--ease-out-quart);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@starting-style {
+  .clockTag {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+.clockTag:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .clockTag:hover {
+    translate: 0 -2px;
+  }
+}
+
+.dial {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.5rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--rojo);
+}
+
+/* Eje central de las agujas. */
+.dial::after {
+  content: "";
+  position: absolute;
+  inset: calc(50% - 2.5px);
+  border-radius: 50%;
+  background: var(--harina);
+}
+
+.hand {
+  position: absolute;
+  inset-inline-start: calc(50% - 1px);
+  inset-block-end: 50%;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--harina);
+  transform-origin: 50% 100%;
+}
+
+.hourHand {
+  inset-inline-start: calc(50% - 1.25px);
+  width: 2.5px;
+  height: 26%;
+}
+
+.minuteHand {
+  height: 36%;
+}
+
+.clockText {
+  display: grid;
+  line-height: 1.2;
+}
+
+.clockTime {
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-ui);
+}
+
+.clockPhrase {
+  color: var(--tostado-suave);
+  font-size: var(--step--1);
+  font-style: italic;
+}
+
+/* ---------- Escritorio: texto y foto lado a lado ---------- */
+@media (min-width: 64rem) {
+  .hero {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+    min-height: clamp(38rem, calc(100svh - var(--header-h)), 58rem);
+  }
+
+  .copy {
+    padding-block: var(--space-xl);
+    padding-inline: max(var(--gutter), (100vw - var(--page-max)) / 2 + var(--gutter)) var(--space-xl);
+  }
+
+  .visual {
+    min-height: 0;
+  }
+
+  /* La costura pasa al borde izquierdo de la foto. */
+  .visual::before {
+    inset: 0 auto 0 -1px;
+    width: calc(var(--festoon-r) + 1px);
+    height: auto;
+    background: radial-gradient(circle at 0 50%, var(--harina) calc(var(--festoon-r) - 0.5px), transparent var(--festoon-r))
+      0 50% / 100% calc(var(--festoon-r) * 2) repeat-y;
+  }
+
+  .stamp {
+    inset-block: auto 12%;
+    inset-inline: 0 auto;
+    translate: -50% 0;
+  }
+
+  .clock {
+    inset-block-end: var(--space-l);
+    inset-inline: auto var(--space-l);
+  }
+}
+
+/* ---------- Coreografía ---------- */
+@keyframes rise {
+  from {
+    translate: 0 108%;
+    rotate: 7deg;
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+@keyframes settle {
+  from {
+    scale: 1.14;
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    scale: 1.5;
+    rotate: -32deg;
+  }
+
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordInner,
+  .lead,
+  .actions,
+  .reach,
+  .photoImg,
+  .stamp,
+  .arc {
+    animation: none;
+  }
+
+  .arc {
+    stroke-dashoffset: 0;
+  }
+
+  .clockTag {
+    transition: opacity 300ms ease;
+  }
+}
