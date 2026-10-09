@@ -1,8 +1,8 @@
 import { animateMini, spring, useInView, useReducedMotion, type AnimationPlaybackControlsWithThen } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import isotype from "~/components/brand/geometry/isotype.json";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import type { IndexedBranch } from "~/lib/branches";
 import { layoutConstellation, type Constellation } from "~/lib/constellation";
+import { BranchCoin } from "./BranchCoin";
 import styles from "./BranchConstellation.module.css";
 
 // Curva de salida fuerte (ease-out-quint): arranca rápido y se asienta suave. Nada entra
@@ -34,6 +34,7 @@ function choreograph(stage: HTMLElement, layout: Constellation, onDone: () => vo
   const ring = stage.querySelector<HTMLElement>("[data-ring]");
   const dots = [...stage.querySelectorAll<HTMLElement>("[data-dot]")];
   const labels = [...stage.querySelectorAll<HTMLElement>("[data-label]")];
+  // La ramita es la cara de adelante de la moneda del centro (BranchCoin).
   const sprig = stage.querySelector<SVGSVGElement>("[data-sprig]");
   // Si el marcado no coincide con el dibujo, el sello se muestra formado, sin coreografía.
   if (!ring || !sprig || dots.length !== layout.ring.length) {
@@ -125,19 +126,25 @@ type BranchConstellationProps = {
   lit: ReadonlySet<string> | null;
   /** Con un filtro activo, el resto del sello se apaga. */
   dim: boolean;
+  /** La sucursal que muestra la moneda del centro, o ninguna (la ramita). */
+  featured: IndexedBranch | null;
   hydrated: boolean;
 };
+
+// Inclinación máxima de la moneda hacia el puntero, en grados.
+const TILT = 12;
 
 /**
  * "Las sucursales forman el sello", como la V de Vremont: sobre una grilla de puntos tenue,
  * las sucursales aparecen dispersas (algunas con su barrio) y vuelan al festón, que se
- * completa a su alrededor con la ramita en el centro. Ya formado, el sello acompaña al buscador: se encienden las sucursales que
- * se muestran y, sin filtro, las del barrio que nombra el tambor.
+ * completa a su alrededor con la ramita en el centro. Ya formado, el sello acompaña al
+ * buscador: se encienden las sucursales que se muestran y, sin filtro, las del barrio que
+ * nombra el tambor. El centro es una moneda que gira para mostrar la sucursal elegida.
  *
  * Es decorativo: el listado y el estado de la búsqueda tienen su propio texto accesible.
  * Sin JavaScript o con movimiento reducido, el sello aparece ya formado.
  */
-export function BranchConstellation({ branches, lit, dim, hydrated }: BranchConstellationProps) {
+export function BranchConstellation({ branches, lit, dim, featured, hydrated }: BranchConstellationProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const inView = useInView(stageRef, { once: true, amount: 0.45 });
@@ -170,8 +177,35 @@ export function BranchConstellation({ branches, lit, dim, hydrated }: BranchCons
     return choreograph(stage, layout, () => setPlayed(true));
   }, [inView, reduceMotion, played, layout]);
 
+  // La moneda gira hacia adelante o hacia atrás según el lugar de cada sucursal en el festón.
+  const order = useMemo(() => new Map(branches.map((branch, index) => [branch.id, index])), [branches]);
+  const orderOf = useCallback((branch: IndexedBranch) => order.get(branch.id) ?? 0, [order]);
+
+  // Con mouse, la moneda se inclina hacia el puntero; con el dedo o movimiento reducido, no.
+  const tilt = (event: PointerEvent<HTMLDivElement>) => {
+    const coin = event.currentTarget.querySelector<HTMLElement>("[data-coin-tilt]");
+    if (!coin || event.pointerType !== "mouse" || reduceMotion) return;
+    const box = coin.getBoundingClientRect();
+    const x = Math.max(-1, Math.min(1, ((event.clientX - box.left) / box.width - 0.5) * 2));
+    const y = Math.max(-1, Math.min(1, ((event.clientY - box.top) / box.height - 0.5) * 2));
+    coin.style.setProperty("--tilt-x", `${(x * TILT).toFixed(2)}deg`);
+    coin.style.setProperty("--tilt-y", `${(-y * TILT).toFixed(2)}deg`);
+  };
+  const untilt = (event: PointerEvent<HTMLDivElement>) => {
+    const coin = event.currentTarget.querySelector<HTMLElement>("[data-coin-tilt]");
+    coin?.style.removeProperty("--tilt-x");
+    coin?.style.removeProperty("--tilt-y");
+  };
+
   return (
-    <div ref={stageRef} className={styles.stage} aria-hidden="true" data-formed={formed || undefined}>
+    <div
+      ref={stageRef}
+      className={styles.stage}
+      aria-hidden="true"
+      data-formed={formed || undefined}
+      onPointerMove={tilt}
+      onPointerLeave={untilt}
+    >
       {layout.labels.map((label) => {
         const point = layout.scatter[label.slot]!;
         return (
@@ -198,13 +232,12 @@ export function BranchConstellation({ branches, lit, dim, hydrated }: BranchCons
               className={styles.dot}
               data-lit={on || undefined}
               data-dim={(dim && !on) || undefined}
+              data-on={(featured !== null && id === featured.id) || undefined}
               style={{ left: `${point.x.toFixed(2)}%`, top: `${point.y.toFixed(2)}%` }}
             />
           );
         })}
-        <svg data-sprig="" className={styles.sprig} viewBox="20 29 60 44" focusable="false">
-          <path d={isotype.sprig} />
-        </svg>
+        <BranchCoin branch={formed ? featured : null} orderOf={orderOf} reduceMotion={reduceMotion === true} />
       </div>
     </div>
   );

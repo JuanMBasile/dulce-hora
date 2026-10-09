@@ -10,11 +10,13 @@ type PictureProps = {
   imgClassName?: string;
   /** Solo la foto del hero carga con prioridad; el resto es diferida. */
   priority?: boolean;
+  /** Carga inmediata sin subir la prioridad: para una foto que se va a mostrar enseguida. */
+  eager?: boolean;
 };
 
 const MIME: Record<string, string> = { avif: "image/avif", webp: "image/webp", jpg: "image/jpeg", jpeg: "image/jpeg" };
 
-export function Picture({ picture, alt, sizes, className, imgClassName, priority = false }: PictureProps) {
+export function Picture({ picture, alt, sizes, className, imgClassName, priority = false, eager = false }: PictureProps) {
   const { sources, img } = picture;
 
   return (
@@ -28,7 +30,7 @@ export function Picture({ picture, alt, sizes, className, imgClassName, priority
         width={img.w}
         height={img.h}
         alt={alt}
-        loading={priority ? "eager" : "lazy"}
+        loading={priority || eager ? "eager" : "lazy"}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
       />

@@ -202,6 +202,7 @@ test("las sucursales aparecen dispersas, con sus barrios, y forman el sello", as
   expect(
     await stage(page)
       .locator("[data-sprig]")
+      .first()
       .evaluate((sprig) => getComputedStyle(sprig).opacity),
   ).toBe("1");
 });
@@ -235,6 +236,42 @@ test("sin filtro, el sello enciende las sucursales del barrio que nombra el tamb
   expect(lit).toBe(branches.filter((branch) => branch.area === area).length);
 });
 
+// La moneda del centro: la cara que queda de frente según cuántas medias vueltas dio.
+async function coinFront(page: Page) {
+  return stage(page)
+    .locator("[data-coin]")
+    .evaluate((coin) => {
+      const turns = Math.round(Number(/rotateY\((-?[\d.]+)deg\)/.exec(coin.style.transform)?.[1] ?? 0) / 180);
+      const face = coin.children[Math.abs(turns) % 2];
+      return face?.querySelector("[data-coin-label]")?.textContent ?? "ramita";
+    });
+}
+
+test("la moneda del centro gira a la sucursal que se busca y enciende su punto", async ({ page }) => {
+  await open(page);
+  await waitFormed(page);
+  await searchbox(page).fill("caballito");
+  // La primera de Caballito en el listado, que ordena por dirección.
+  await expect.poll(() => coinFront(page), { timeout: 5000 }).toContain("Av. Ángel Gallardo 922");
+  await expect(stage(page).locator("[data-dot][data-on]")).toHaveCount(1);
+
+  await searchbox(page).fill("zzz");
+  await expect.poll(() => coinFront(page), { timeout: 5000 }).toBe("ramita");
+  await expect(stage(page).locator("[data-dot][data-on]")).toHaveCount(0);
+});
+
+test("con el mouse, la moneda muestra la dirección que se mira en el listado", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "d1440", "El hover existe solo con mouse.");
+  await open(page);
+  await waitFormed(page);
+  const link = section(page).getByRole("link", { name: /^Pinzón 1661/ });
+  await link.hover();
+  await expect.poll(() => coinFront(page), { timeout: 5000 }).toContain("Pinzón 1661");
+  await link.focus();
+  await section(page).getByRole("link", { name: /^Caboto 444/ }).focus();
+  await expect.poll(() => coinFront(page), { timeout: 5000 }).toContain("Caboto 444");
+});
+
 test.describe("con movimiento reducido", () => {
   test.use({ reducedMotion: "reduce" });
 
@@ -251,6 +288,19 @@ test.describe("con movimiento reducido", () => {
         element.getAnimations({ subtree: true }).filter((animation) => animation.playState === "running").length,
     );
     expect(running).toBe(0);
+  });
+
+  test("la moneda cambia de cara sin girar", async ({ page }) => {
+    await open(page);
+    await stage(page).scrollIntoViewIfNeeded();
+    await expect(stage(page)).toHaveAttribute("data-formed");
+    expect(await coinFront(page)).toBe("ramita");
+    await searchbox(page).fill("boedo");
+    await expect.poll(() => coinFront(page), { timeout: 5000 }).toContain("Av. San Juan 3405");
+    const spins = await stage(page)
+      .locator("[data-coin]")
+      .evaluate((coin) => coin.getAnimations().filter((animation) => "transform" in (animation.effect as KeyframeEffect).getKeyframes()[0]!).length);
+    expect(spins).toBe(0);
   });
 
   test("el tambor queda quieto y los cambios son instantáneos", async ({ page }) => {

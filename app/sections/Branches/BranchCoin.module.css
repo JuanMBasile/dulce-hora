@@ -1,0 +1,127 @@
+/* La moneda del centro del sello (BranchCoin.tsx): de un lado la ramita, del otro la foto
+   de la sucursal. Se mide con el escenario del sello (cqmin): el sello ocupa 86cqmin. */
+
+.coin {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: 60%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  perspective: 60rem;
+}
+
+.lift,
+.tilt,
+.body {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* Con el mouse encima del sello, la moneda se inclina hacia el puntero. */
+.tilt {
+  transform: rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg));
+  transition: transform 360ms var(--ease-out-quart);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.face[data-back] {
+  transform: rotateY(180deg);
+}
+
+/* Cara de la sucursal: la foto en un disco blanco, como una etiqueta de la caja. */
+.face[data-photo] {
+  background: var(--harina);
+  box-shadow: 0 1.5cqmin 4cqmin -1.5cqmin rgb(34 20 15 / 0.6);
+}
+
+.face[data-photo]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.1cqmin solid var(--harina);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.picture {
+  position: absolute;
+  inset: 0;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.label {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.6cqmin;
+  padding: 7cqmin 9cqmin 6.5cqmin;
+  background: linear-gradient(transparent, rgb(34 20 15 / 0.85) 58%);
+  color: var(--harina);
+  text-align: center;
+}
+
+.area {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 4.4cqmin, 2.25rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.address {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--font-text);
+  font-size: clamp(0.8125rem, 2.3cqmin, 1.125rem);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag {
+  margin-block-start: 0.6cqmin;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.18);
+  font-family: var(--font-ui);
+  font-size: clamp(0.625rem, 1.4cqmin, 0.75rem);
+  font-weight: 600;
+  letter-spacing: var(--tracking-ui);
+}
+
+/* Cara de la ramita: la del sello de siempre. */
+.sprig {
+  width: 57%;
+  margin-block-start: 4%;
+  fill: var(--harina);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt {
+    transition: none;
+  }
+}

@@ -14,6 +14,7 @@ Lo que el sitio usa pero todavía no está validado con la marca. Cada dato indi
   - Rosario: la numeración oficial repite "DH Rosario 10" y salta el 9. Uno de los resultados suma "Av. San Martín 5682", que no se incluyó porque no aparece en los otros. Un directorio da "San Juan 1536" en lugar de "San Juan 1538".
   - Los barrios de Rosario, para agruparlas como en CABA.
 - **Para después (páginas por sucursal):** horarios, teléfono o WhatsApp de cada local, enlaces de Rappi y PedidosYa, y coordenadas. Con las coordenadas se pueden ordenar por distancia y dibujar un mapa propio.
+- **Fotos de los locales:** la moneda del sello muestra hoy fotos de productos con el aviso "Foto ilustrativa" (`app/sections/Branches/standInPhotos.ts`). Hace falta una foto de la fachada de cada sucursal, cuadrada o apaisada, de al menos 1000 px. Con ellas se quita el aviso.
 - **Cómo cargarlo:** basta con reemplazar el arreglo `branches`. Los filtros, los contadores y el tambor de barrios se arman solos. Si aparece una zona nueva, se agrega a `regions`.
 
 ## Otros datos marcados en el código

@@ -188,6 +188,24 @@ Referencia: cómo muestra Vremont sus oficinas ([`referencia-vremont.md`](./refe
 - **Ya formado, acompaña al buscador:** con un filtro se encienden las sucursales que se muestran y se apaga el resto; cada zona ocupa un tramo del festón (Rosario, el izquierdo). Sin filtro, se encienden las del barrio que nombra el tambor.
 - **Sin JavaScript o con movimiento reducido:** el sello se ve ya formado. Es decorativo (`aria-hidden`): el listado y el estado tienen su propio texto.
 
+**La moneda del sello** (`BranchCoin.tsx`)
+- **Por qué esta opción.** Se probaron tres formas de sumar 3D (un mockup con las tres): el sello que se inclina como bandeja y para vidrieras sobre los puntos, la cámara que vuela hasta el punto, y el centro que gira como una moneda. Quedó la moneda: le da un uso al sello sin taparlo, no compite con el buscador, se lee bien en el celular y es la más liviana.
+- **Qué muestra:** de un lado la ramita, del otro la foto de una sucursal con su barrio y su dirección.
+  - La dirección que se mira en el listado (mouse, con 140 ms de espera para no girar en cada fila que se cruza, o foco del teclado).
+  - Si no, la primera sucursal, en el orden del listado, del barrio que nombra el tambor. Con una búsqueda o un filtro, el tambor aterriza en lo que se muestra, así que la moneda también.
+  - Antes de que gire el tambor, y sin resultados, la ramita.
+  - El punto de esa sucursal se pinta de almíbar y suelta una onda.
+- **Movimiento:**
+  - Media vuelta con un resorte de Motion (0,62 s, rebote 0,22), hacia adelante o hacia atrás según dónde queda la sucursal nueva en el listado.
+  - Mientras gira, la moneda se levanta un poco (escala 1,06) y el cartel de la foto sube cuando la cara ya está casi de frente.
+  - La foto nueva se carga en la cara de atrás y se decodifica antes de girar, así nunca da vuelta a una cara vacía (espera como mucho 700 ms).
+  - Si la elección cambia en medio de un giro, al terminar gira otra vez hasta la última. Nunca hay dos giros a la vez.
+  - Con mouse, la moneda se inclina hacia el puntero (hasta 12°).
+  - Con movimiento reducido no gira: la cara nueva aparece con un fundido corto, y no hay inclinación ni onda.
+- **Estado en React sin refs en el render:** la cara de atrás y el pedido de giro se calculan durante el render (como el tambor); el giro corre en un efecto y, al terminar, deja la cara nueva adelante.
+- **Fotos provisorias** (`standInPhotos.ts`): no hay fotos de los locales, así que cada sucursal muestra un producto con el aviso "Foto ilustrativa". Usan el preset `plate` del dial de productos, así que comparten archivos con él.
+- **Peso:** va en el chunk diferido de Sucursales. El JS inicial no cambia (138,1 KB).
+
 **Chunks diferidos**
 - **Historia y Sucursales van en chunks diferidos** con `React.lazy`, como preveía la nota de Historia: están debajo del pliegue. Historia pesa 2,4 KB gz y Sucursales, 10,4 KB gz con el sello y Motion `animateMini`.
 - **`app/entry.server.tsx` propio.** El prerender no manda user-agent y la entrada por defecto usaba `onShellReady`. Además, React manda aparte todo límite de Suspense de más de 12 800 bytes (`progressiveChunkSize`), en un `<div hidden>` que solo JavaScript ubica. Sin JS, las secciones no se veían.
