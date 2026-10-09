@@ -1,5 +1,6 @@
 import { sections, site } from "~/data/site";
 import { organizationJsonLd } from "~/lib/seo";
+import { Branches } from "~/sections/Branches/Branches";
 import { Hero } from "~/sections/Hero/Hero";
 import { ProductMarquee } from "~/sections/Marquee/ProductMarquee";
 import { Products } from "~/sections/Products/Products";
@@ -33,19 +34,7 @@ export default function Home() {
 
       <Story />
 
-      <section
-        id={sections.sucursales}
-        tabIndex={-1}
-        className={`surface-rojo festoon-top ${styles.section} ${styles.colored}`}
-        aria-labelledby="sucursales-titulo"
-      >
-        <div className="page-width">
-          <h2 id="sucursales-titulo" className={styles.heading}>
-            Panaderías cerca de casa
-          </h2>
-          <p className={styles.intro}>{site.reach}</p>
-        </div>
-      </section>
+      <Branches />
 
       <section
         id={sections.franquicias}

@@ -142,3 +142,48 @@ El plan nombra siete skills. Verifiqué cada una en disco; no me apoyo en ningun
 - Sin JS sigue la animación CSS anterior. Con movimiento reducido queda quieta.
 
 **Presupuesto:** el JS inicial pasó de 136,4 a 138,6 KB gz, con un límite de 140. Si la próxima sección lo excede, la escena se puede pasar a un chunk diferido (`React.lazy`), porque está debajo del pliegue.
+
+## Sucursales · buscador
+
+Referencia: cómo muestra Vremont sus oficinas ([`referencia-vremont.md`](./referencia-vremont.md)). Los datos son un listado parcial a confirmar ([`datos-a-confirmar.md`](./datos-a-confirmar.md)).
+
+**Qué hace**
+- **Datos:** `app/data/branches.ts` arma el listado, los filtros por zona, los contadores y el tambor. Una zona sin sucursales no muestra filtro.
+- **Búsqueda** (`app/lib/branches.ts`, con tests):
+  - Busca por barrio, calle, altura o ciudad, sin tildes ni mayúsculas. Todas las palabras tienen que aparecer.
+  - Entiende alias ("recoleta" encuentra Barrio Norte), abreviaturas ("avenida" encuentra "Av.") y nombres pegados ("montecastro").
+  - La coincidencia se resalta sobre el texto original, con tildes.
+- **Filtros por zona:**
+  - Botones con `aria-pressed`, que se agregan recién al hidratar, como los roles del dial.
+  - Cada filtro cuenta lo que encuentra la búsqueda. Una píldora blanca se desliza hasta el filtro activo.
+- **Estado:** el contador mecánico muestra cuántas hay, con el contexto ("en Rosario · para «san juan»"). Un `role="status"` lo anuncia cuando se deja de tipear (450 ms).
+- **Listado:** papel blanco con el festón del sello, agrupado por zona y por barrio.
+  - Cada dirección abre la ficha del local en Google Maps ("Dulce Hora, <dirección>, <barrio>, <ciudad>").
+  - "Cerca de mí, en Google Maps" deja que Maps ubique al visitante: no hacen falta coordenadas propias ni permisos.
+- **Sin resultados:** si la búsqueda aparece en otra zona, lo dice y ofrece verlas todas. Si no aparece en ninguna, ofrece borrarla y abrir una franquicia ("¿No hay un Dulce Hora en tu barrio?").
+- **Movimiento:**
+  - "Estamos en <barrio>": el tambor sube como el cartel de horarios del dial. Arranca en "tu barrio" (lo que trae el HTML) y, con la columna a la vista, recorre los barrios cada 2,4 s. Se detiene mientras se escribe y, con un filtro o una búsqueda, aterriza en lo que se muestra.
+  - Las cifras del contador son tiras de 0 a 9 dibujadas por CSS (`content`), así que no queda texto suelto en el HTML.
+  - Al filtrar, las filas se deslizan desde donde estaban (FLIP con la Web Animations API sobre `transform`, `app/lib/flip.ts`) y el papel acompaña el cambio de alto.
+  - Las filas aparecen con CSS scroll-driven (`view()`), como los valores de Historia.
+  - Con movimiento reducido, no hay tambor, FLIP ni revelado: los cambios son instantáneos.
+- **Sin JavaScript:** el listado completo queda visible y agrupado. El buscador, los filtros y el tambor se ocultan con `@media (scripting: none)`.
+
+**Chunk diferido**
+- El JS inicial estaba en 138,6 KB de 140. El buscador (datos, búsqueda y movimiento, 5,7 KB gz) va en un chunk diferido con `React.lazy`.
+  - En la Home quedan solo la sección y su título (`Branches.tsx`).
+  - El buscador (`BranchFinder.tsx`) se hidrata cuando llega su chunk.
+- **`app/entry.server.tsx` propio.** El prerender no manda user-agent y la entrada por defecto usaba `onShellReady`. Además, React manda aparte todo límite de Suspense de más de 12 800 bytes (`progressiveChunkSize`), en un `<div hidden>` que solo JavaScript ubica. Sin JS, la sección no se veía.
+  - Ahora el prerender espera todo (`onAllReady`) y no separa nada (`progressiveChunkSize: Infinity`).
+  - `seo-nojs` verifica que el listado esté dentro de `<main>` y que no haya `<div hidden id="S:…">`.
+  - Esto también sirve para diferir Historia si la próxima sección lo necesita.
+- **`build.cssCodeSplit: false`.** Con el CSS partido por chunk, React Router solo enlaza el de los módulos que la ruta importa de forma estática. El CSS del buscador llegaba con su chunk: sin estilos hasta entonces, y sin JS, nunca.
+  - Tampoco alcanzaba con importar el CSS Module desde la Home: Vite marca los CSS Modules sin efectos secundarios y descarta ese import. Además, `?url` no está soportado con CSS Modules.
+  - Ahora hay una sola hoja enlazada en el HTML. Comprime mejor: 9,3 KB gz con la sección nueva incluida, contra 8,6 KB antes sin ella.
+  - El orden de las reglas cambió. No hay conflictos: el CSS global va en `@layer` y ningún módulo redefine tokens de superficie sobre el mismo elemento que `.surface-*`.
+  - Efecto lateral: React Router copia a `build/client/assets` el `style-*.css` del build del servidor, que no se enlaza. Es un archivo de más en el deploy, inofensivo.
+- **Probado y descartado:** agrupar los módulos compartidos con `codeSplitting.groups` de Rolldown subió el JS inicial a 140,2 KB.
+
+**Presupuesto:** JS inicial 139,4 KB de 140 (antes 138,6), CSS 9,3 KB, HTML 19,8 KB. Rolldown crea chunks compartidos chicos (`clock`, `urls`) para lo que usan la Home y el buscador; eso explica los 0,8 KB. Para la próxima sección conviene diferir la escena de Historia (unos 2 KB).
+
+**Validación:** tsc y eslint limpios; Vitest 32/32; build y presupuesto ok; Playwright 133 pasados y 5 omitidos a propósito, en m375, m390, t768, d1440 y no-js (`branches` nuevo; `seo-nojs` ampliado).

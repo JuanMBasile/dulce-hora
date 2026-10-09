@@ -1,0 +1,610 @@
+/* Buscador y listado de sucursales (BranchFinder.tsx, chunk diferido). Bloque Rojo con el
+   buscador a la izquierda y el listado sobre un papel blanco con el festón del sello.
+   Sin JavaScript queda el listado completo; el buscador, los filtros y el tambor de
+   barrios dependen de JavaScript. */
+
+/* ---------- Columna del buscador ---------- */
+.aside {
+  display: grid;
+  gap: var(--space-m);
+  align-content: start;
+}
+
+/* "Estamos en Caballito": el barrio gira como un tambor. Es decorativo; la búsqueda y su
+   estado tienen su propio texto accesible. */
+.drumLine {
+  font-size: var(--step-2);
+  font-style: italic;
+  line-height: 1.15;
+  transition: opacity var(--dur-ui) var(--ease-out-quart);
+}
+
+.drumLine[data-empty] {
+  opacity: 0;
+}
+
+.drumLead {
+  color: var(--tinta-suave);
+}
+
+.drum {
+  display: inline-grid;
+  vertical-align: bottom;
+  overflow: clip;
+  padding-block: 0.06em 0.16em;
+  margin-block: -0.06em -0.16em;
+  font-family: var(--font-display);
+  font-size: 1.3em;
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: var(--tracking-display);
+}
+
+.drumIn,
+.drumOut {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.drumIn:not([data-first]) {
+  animation: drum-in 720ms var(--ease-out-expo) both;
+}
+
+.drumOut {
+  animation: drum-out 240ms var(--ease-in-out) both;
+}
+
+@keyframes drum-in {
+  from {
+    translate: 0 100%;
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@keyframes drum-out {
+  to {
+    translate: 0 -100%;
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+/* ---------- Búsqueda ---------- */
+.finder {
+  display: grid;
+  gap: var(--space-s);
+}
+
+.search {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1.3;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem 3.25rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--harina);
+  color: var(--tostado);
+  font-family: var(--font-ui);
+  font-size: max(var(--step-0), 16px); /* iOS no hace zoom desde 16 px */
+  font-weight: 600;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  box-shadow: 0 0.75rem 2rem -1rem rgb(34 20 15 / 0.55);
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--tostado-suave);
+  font-weight: 500;
+  opacity: 1;
+}
+
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.searchIcon,
+.clear svg,
+.arrow,
+.nearestIcon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.searchIcon {
+  position: absolute;
+  inset-inline-start: 1.15rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--rojo);
+  pointer-events: none;
+}
+
+.clear {
+  position: absolute;
+  inset-inline-end: 0.375rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tostado);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-hover) var(--ease-out-quart);
+}
+
+.clear svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+/* El foco del botón queda dentro del campo blanco: el anillo usa la tinta. */
+.clear:focus-visible {
+  outline-color: var(--tostado);
+  outline-offset: -4px;
+}
+
+@media (hover: hover) {
+  .clear:hover {
+    background: rgb(34 20 15 / 0.08);
+  }
+}
+
+/* ---------- Filtros por zona ---------- */
+/* Una píldora blanca se desliza hasta el filtro activo (Branches.tsx la ubica). */
+.chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.pill {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: var(--pill-w, 0);
+  height: var(--pill-h, 0);
+  translate: var(--pill-x, 0) var(--pill-y, 0);
+  border-radius: var(--radius-pill);
+  background: var(--harina);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chips[data-pill] .pill {
+  opacity: 1;
+}
+
+.chips[data-pill="ready"] .pill {
+  transition:
+    translate 520ms var(--ease-out-expo),
+    width 520ms var(--ease-out-expo),
+    height 520ms var(--ease-out-expo);
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.95rem;
+  border: 1.5px solid var(--linea);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--tinta);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 650;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1.1;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--dur-hover) var(--ease-out-quart),
+    border-color var(--dur-hover) var(--ease-out-quart),
+    scale var(--dur-press) var(--ease-out-quart);
+}
+
+.chip:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip:not([data-active]):hover {
+    border-color: var(--harina);
+  }
+}
+
+/* Antes de que la píldora se ubique (o sin ella), el filtro activo se pinta solo. */
+.chip[data-active] {
+  border-color: var(--harina);
+  background: var(--harina);
+  color: var(--rojo);
+}
+
+.chips[data-pill] .chip[data-active] {
+  background: transparent;
+}
+
+.chipCount {
+  min-width: 1.6em;
+  padding: 0.1em 0.4em 0.12em;
+  border-radius: var(--radius-pill);
+  background: rgb(34 20 15 / 0.22);
+  font-size: 0.8em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition:
+    background-color var(--dur-hover) var(--ease-out-quart),
+    color var(--dur-hover) var(--ease-out-quart);
+}
+
+.chip[data-active] .chipCount {
+  background: var(--rojo);
+  color: var(--harina);
+}
+
+/* ---------- Contador ---------- */
+.count {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-xs);
+}
+
+/* Cada cifra es una tira de 0 a 9 (dibujada por CSS, así no queda texto suelto en el
+   HTML) que se desplaza hasta su valor: --d. */
+.odometer {
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 2.2rem + 3.6vw, 5.5rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.digit {
+  display: block;
+  height: 1em;
+  overflow: clip;
+}
+
+.digit::before {
+  content: "0\a 1\a 2\a 3\a 4\a 5\a 6\a 7\a 8\a 9";
+  display: block;
+  white-space: pre;
+  translate: 0 calc(var(--d, 0) * -1em);
+  transition: translate 760ms var(--ease-out-expo);
+}
+
+.countText {
+  display: grid;
+  padding-block-end: 0.35em;
+  font-family: var(--font-ui);
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1.2;
+}
+
+.countLabel {
+  font-size: var(--step-1);
+  font-weight: 700;
+}
+
+.countContext {
+  color: var(--tinta-suave);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+
+.countContext:empty {
+  display: none;
+}
+
+.nearest {
+  justify-self: start;
+}
+
+.nearestIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* ---------- Listado ---------- */
+/* Papel blanco sobre el bloque Rojo: recupera las tintas de Harina y apoya el festón. */
+.board {
+  --superficie: var(--harina);
+  --tinta: var(--tostado);
+  --tinta-suave: var(--tostado-suave);
+  --linea: rgb(34 20 15 / 0.14);
+  --foco: var(--tostado);
+  margin-block-start: var(--space-s);
+  border-end-start-radius: var(--radius-m);
+  border-end-end-radius: var(--radius-m);
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: 0 2rem 3rem -2rem rgb(34 20 15 / 0.55);
+}
+
+.boardBody {
+  container-type: inline-size;
+  padding: var(--space-l) clamp(1rem, 0.5rem + 2vw, 2rem) var(--space-m);
+}
+
+.region + .region {
+  margin-block-start: var(--space-xl);
+}
+
+.regionTitle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-s);
+  padding-block-end: var(--space-2xs);
+  border-block-end: 2px solid var(--rojo);
+  color: var(--rojo);
+  font-family: var(--font-ui);
+  font-size: var(--step--1);
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  line-height: 1.3;
+}
+
+.regionCount {
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: grid;
+  gap: 0.15rem var(--space-m);
+  padding-block: var(--space-s) var(--space-xs);
+  border-block-end: 1px solid var(--linea);
+}
+
+.area {
+  font-size: var(--step-2);
+  line-height: 1;
+}
+
+.addresses {
+  display: grid;
+}
+
+/* El enlace es texto en línea: si la dirección corta línea, la flecha sigue a la última
+   palabra. El relleno vertical da el alto del objetivo táctil. */
+.address {
+  display: inline-block;
+  padding-block: 0.55rem;
+  font-size: var(--step-1);
+  line-height: 1.25;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arrow {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-inline-start: 0.3em;
+  vertical-align: -0.1em;
+  color: var(--rojo);
+  transition: translate var(--dur-hover) var(--ease-out-quart);
+}
+
+@media (hover: hover) {
+  .address:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--rojo);
+  }
+
+  .address:hover .arrow {
+    translate: 0.12em -0.12em;
+  }
+}
+
+.mark {
+  border-radius: 0.15em;
+  background: rgb(213 13 23 / 0.12);
+  color: var(--rojo-horno);
+}
+
+@container (min-width: 34rem) {
+  .row {
+    grid-template-columns: minmax(0, 10.5rem) minmax(0, 1fr);
+    align-items: baseline;
+  }
+
+  .area {
+    padding-block-start: 0.55rem;
+  }
+
+  /* Sin barrio visible, las direcciones toman todo el ancho. */
+  .row[data-solo] > .addresses {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (min-width: 46rem) {
+  .addresses {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-m);
+  }
+}
+
+/* ---------- Sin resultados ---------- */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-s);
+  padding-block: var(--space-l);
+  text-align: center;
+}
+
+.emptySprig {
+  width: 3.25rem;
+  height: auto;
+  fill: var(--rojo);
+  rotate: -8deg;
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  overflow-wrap: anywhere;
+}
+
+.emptyText {
+  max-width: 30rem;
+  color: var(--tinta-suave);
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
+.emptyButton {
+  min-height: var(--tap);
+  padding: 0.5rem 1.4rem;
+  border: 2px solid var(--tostado);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--tostado);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-stretch: 100%;
+  letter-spacing: var(--tracking-ui);
+  transition:
+    background-color var(--dur-hover) var(--ease-out-quart),
+    color var(--dur-hover) var(--ease-out-quart),
+    scale var(--dur-press) var(--ease-out-quart);
+}
+
+.emptyButton:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) {
+  .emptyButton:hover {
+    background: var(--tostado);
+    color: var(--harina);
+  }
+}
+
+.emptyFranchise {
+  margin-block-start: var(--space-2xs);
+  font-style: italic;
+}
+
+.emptyFranchise a {
+  color: var(--rojo);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ---------- Escritorio: buscador a la izquierda, listado a la derecha ---------- */
+@media (min-width: 64rem) {
+  .aside {
+    gap: var(--space-l);
+  }
+
+  .board {
+    margin-block-start: 0;
+  }
+}
+
+/* El buscador acompaña el scroll del listado, si entra entero en la pantalla. */
+@media (min-width: 64rem) and (min-height: 44rem) {
+  .aside {
+    position: sticky;
+    inset-block-start: calc(var(--header-h) + var(--space-l));
+  }
+}
+
+/* ---------- Mejora progresiva ---------- */
+@media (scripting: none) {
+  .drumLine,
+  .finder {
+    display: none;
+  }
+}
+
+/* Cada fila del listado aparece al entrar en pantalla, con el scroll mismo y sin
+   JavaScript. Sin soporte, quedan quietas y completas. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .row {
+      animation: row-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    translate: 0 1.25rem;
+  }
+}
+
+/* Movimiento reducido: los cambios son instantáneos, sin tambor ni desplazamientos. */
+@media (prefers-reduced-motion: reduce) {
+  .drumIn:not([data-first]) {
+    animation: none;
+  }
+
+  .drumOut {
+    display: none;
+  }
+
+  .digit::before,
+  .chips[data-pill="ready"] .pill {
+    transition: none;
+  }
+
+  .chip:active,
+  .emptyButton:active {
+    scale: none;
+  }
+}

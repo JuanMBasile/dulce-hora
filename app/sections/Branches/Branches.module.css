@@ -1,0 +1,74 @@
+/* "Panaderías cerca de casa": la sección y su título. El buscador y el listado tienen su
+   propio módulo (BranchFinder.module.css), que viaja con el chunk diferido. */
+
+.section {
+  padding-block: var(--section-y);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-xl);
+}
+
+/* ---------- Encabezado ---------- */
+.header {
+  display: grid;
+  gap: var(--space-m);
+}
+
+/* La máscara deja que el título suba al entrar (ver el final). */
+.title {
+  max-width: 14ch;
+  overflow: clip;
+  padding-block: 0.04em 0.12em;
+  margin-block: -0.04em -0.12em;
+  font-size: clamp(2.75rem, 1.5rem + 5vw, 6rem);
+  line-height: 0.92;
+}
+
+.titleInner {
+  display: block;
+}
+
+.lead {
+  max-width: 28rem;
+  color: var(--tinta-suave);
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+
+/* ---------- Escritorio: el encabezado ocupa el ancho; abajo, buscador y listado ---------- */
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 25rem) minmax(0, 1fr);
+    column-gap: var(--space-2xl);
+    row-gap: var(--space-l);
+    align-items: start;
+  }
+
+  .header {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+    align-items: end;
+    margin-block-end: var(--space-l);
+  }
+}
+
+/* El título sube con el scroll mismo, sin JavaScript. Sin soporte, queda quieto. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .titleInner {
+      animation: rise var(--ease-out-quart) both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 30%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    translate: 0 105%;
+  }
+}

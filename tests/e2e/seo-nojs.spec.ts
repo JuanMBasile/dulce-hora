@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { branches } from "../../app/data/branches";
 import { moments } from "../../app/data/products";
 import { story } from "../../app/data/story";
+import { branchMapsQuery } from "../../app/lib/branches";
+import { mapsSearchUrl } from "../../app/lib/urls";
 
 // El HTML prerenderizado tiene que traer el contenido real, sin depender de JS.
 // Este spec crece en cada hito (ver plan, sección 7).
@@ -98,6 +101,20 @@ test.describe("HTML prerenderizado (sin ejecutar JS)", () => {
     for (const value of story.values) expect(html).toContain(value.text);
   });
 
+  test("trae el listado completo de sucursales en su lugar, con enlaces a Google Maps", () => {
+    // El buscador va en un chunk diferido: el HTML lo trae completo y dentro de <main>,
+    // no en un <div hidden> que solo JavaScript ubica (ver app/entry.server.tsx).
+    const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
+    expect(main).toContain('id="sucursales"');
+    for (const branch of branches) {
+      expect(main).toContain(branch.address);
+      expect(main).toContain(`href="${mapsSearchUrl(branchMapsQuery(branch)).replace("&", "&amp;")}"`);
+    }
+    expect(html).not.toMatch(/<div hidden id="S:/);
+    // El CSS de la sección está enlazado en el HTML, no llega con el chunk.
+    expect(html).toMatch(/<link rel="stylesheet" href="\/assets\/style-[^"]+\.css"\/>/);
+  });
+
   test("trae los enlaces de navegación, los CTA y los contactos reales", () => {
     for (const item of NAV) {
       expect(html).toContain(`href="${item.href}"`);
@@ -174,6 +191,22 @@ test.describe("Página con JavaScript desactivado", () => {
       await expect(section.getByRole("heading", { level: 4, name: value.name })).toBeVisible();
       await expect(section.getByText(value.text)).toBeVisible();
     }
+  });
+
+  test("las sucursales quedan listadas y visibles, sin buscador", async ({ page }) => {
+    await page.goto("/");
+    const section = page.locator("#sucursales");
+    // La búsqueda y los filtros dependen de JS: sin JS no se muestran.
+    await expect(section.getByRole("searchbox")).toBeHidden();
+    await expect(section.getByRole("button")).toHaveCount(0);
+
+    const links = section.getByRole("link", { name: /cómo llegar/ });
+    await expect(links).toHaveCount(branches.length);
+    for (const link of [links.first(), links.last()]) {
+      await link.scrollIntoViewIfNeeded();
+      await expect(link).toBeVisible();
+    }
+    await expect(section.getByRole("link", { name: /Cerca de mí, en Google Maps/ })).toBeVisible();
   });
 
   test("el pie trae la navegación y los contactos visibles", async ({ page }) => {
