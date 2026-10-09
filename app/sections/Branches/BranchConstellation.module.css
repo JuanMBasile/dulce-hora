@@ -57,13 +57,32 @@
   background: rgb(255 255 255 / 0.3);
 }
 
-.sprig {
+/* La sucursal que muestra la moneda: su punto se pinta de almíbar y suelta una onda. */
+.stage[data-formed] .dot[data-on] {
+  scale: 2.3;
+  background: var(--almibar);
+  box-shadow: 0 0 0 calc(var(--dot) * 0.45) rgb(242 179 61 / 0.3);
+}
+
+.stage[data-formed] .dot[data-on]::after {
+  content: "";
   position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 50%;
-  width: 34%;
-  translate: -50% -46%;
-  fill: var(--harina);
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 calc(var(--dot) * 0.2) var(--almibar);
+  opacity: 0;
+  animation: ping 900ms var(--ease-out-quart);
+}
+
+@keyframes ping {
+  from {
+    opacity: 0.9;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 3.2;
+  }
 }
 
 /* Barrios que se nombran mientras los puntos están dispersos. El texto va hacia el
@@ -107,7 +126,7 @@
    entra en pantalla. */
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .stage:not([data-formed]) .dot,
-  .stage:not([data-formed]) .sprig {
+  .stage:not([data-formed]) [data-sprig] {
     opacity: 0;
   }
 }
@@ -115,5 +134,9 @@
 @media (prefers-reduced-motion: reduce) {
   .dot {
     transition: none;
+  }
+
+  .stage[data-formed] .dot[data-on]::after {
+    animation: none;
   }
 }

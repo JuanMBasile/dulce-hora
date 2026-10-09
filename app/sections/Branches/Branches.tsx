@@ -49,6 +49,10 @@ const DRUM_FIRST_MS = 1400;
 const DRUM_EVERY_MS = 2400;
 // El estado se anuncia cuando se deja de tipear, no en cada tecla.
 const ANNOUNCE_MS = 450;
+// Al recorrer el listado con el mouse, la moneda espera a que se detenga en una dirección:
+// pasar por encima de diez filas no la hace girar diez veces.
+const POINT_MS = 140;
+const UNPOINT_MS = 400;
 
 /* ---------- Íconos (trazo de 2 px, en currentColor) ---------- */
 function Icon({ name, className }: { name: "search" | "clear" | "arrow" | "pin"; className?: string }) {
@@ -255,6 +259,28 @@ export function Branches() {
     return new Set(INDEX.filter((branch) => branch.area === drumWord).map((branch) => branch.id));
   }, [filtered, visible, drum.tick, drumWord]);
 
+  /* ---------- La moneda del sello ---------- */
+  // Muestra la dirección que se está mirando en el listado (mouse o teclado); si no, la
+  // primera sucursal del barrio que nombra el tambor; antes de que gire, la ramita.
+  const [pointed, setPointed] = useState<string | null>(null);
+  const pointTimer = useRef(0);
+  const point = (id: string | null, delay: number) => {
+    window.clearTimeout(pointTimer.current);
+    pointTimer.current = window.setTimeout(() => setPointed(id), delay);
+  };
+  useEffect(() => () => window.clearTimeout(pointTimer.current), []);
+  const branchIn = (target: EventTarget) =>
+    target instanceof Element ? (target.closest<HTMLElement>("[data-branch]")?.dataset.branch ?? null) : null;
+
+  const featured = useMemo(() => {
+    const looked = pointed ? visible.find((branch) => branch.id === pointed) : undefined;
+    if (looked) return looked;
+    if (drum.tick < 0) return null;
+    // La primera del barrio en el orden del listado (por dirección), no en el de los datos.
+    const listed = groups.flatMap((group) => group.areas.flatMap((area) => area.branches));
+    return listed.find((branch) => branch.area === drumWord) ?? null;
+  }, [pointed, visible, groups, drum.tick, drumWord]);
+
   /* ---------- Vacío ---------- */
   const elsewhere = visible.length === 0 && matches.length > 0;
 
@@ -273,7 +299,7 @@ export function Branches() {
           <p className={styles.lead}>{site.reach}</p>
         </header>
 
-        <BranchConstellation branches={RING} lit={lit} dim={filtered} hydrated={hydrated} />
+        <BranchConstellation branches={RING} lit={lit} dim={filtered} featured={featured} hydrated={hydrated} />
 
         <div className={styles.aside}>
           <p
@@ -355,7 +381,21 @@ export function Branches() {
         </div>
 
         <div className={`festoon-top ${styles.board}`}>
-          <div ref={boardRef} className={styles.boardBody}>
+          <div
+            ref={boardRef}
+            className={styles.boardBody}
+            onPointerOver={(event) => {
+              // Entre una dirección y otra (el nombre del barrio, un margen) la moneda se queda.
+              const id = branchIn(event.target);
+              if (id && event.pointerType === "mouse") point(id, POINT_MS);
+            }}
+            onPointerLeave={() => point(null, UNPOINT_MS)}
+            onFocus={(event) => {
+              const id = branchIn(event.target);
+              if (id) point(id, 0);
+            }}
+            onBlur={() => point(null, UNPOINT_MS)}
+          >
             {groups.map((group) => (
               <section key={group.region.id} className={styles.region} aria-labelledby={`zona-${group.region.id}`}>
                 <h3 id={`zona-${group.region.id}`} className={styles.regionTitle} data-flip={`zona-${group.region.id}`}>
@@ -379,6 +419,7 @@ export function Branches() {
                             <li key={branch.id}>
                               <a
                                 className={styles.address}
+                                data-branch={branch.id}
                                 href={mapsSearchUrl(branchMapsQuery(branch))}
                                 rel="noopener"
                                 aria-label={`${branch.address}, ${area.area}: cómo llegar (Google Maps)`}
