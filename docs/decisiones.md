@@ -109,3 +109,36 @@ El plan nombra siete skills. Verifiqué cada una en disco; no me apoyo en ningun
   - La foto entra girando (−16° → 0°) con un blur que funde las dos imágenes.
   - Con movimiento reducido, todo eso se reemplaza por un fundido corto y la aguja salta.
 - **Fotos del dial:** tomas cenitales sobre plato blanco (trenzas, tarta y masas secas) y el mini Rogel para festejar. El plato se lee como la esfera de un reloj.
+
+## M7 (parcial) · Escena de Historia y marquesina con scroll
+
+**Escena "Nuestra historia"**
+- **Qué hace:**
+  - La sección queda fija mientras se scrollea (340svh de recorrido).
+  - El festón del sello, con un borde rojo, gira como un reloj y se abre desde un sello chico hasta cubrir toda la pantalla.
+  - "Nuestra" e "historia" flanquean el sello y el festón los empuja fuera de cuadro.
+  - Sobre la foto velada, el manifiesto oficial ("Creemos que disfrutar de una buena medialuna…") se enciende palabra por palabra.
+  - Al soltarse, el bloque siguiente sube con el festón blanco mordiendo el borde de la foto.
+- **Cómo:**
+  - Motion calcula dos `useScroll`, la llegada y el tramo fijo, suavizados con `useSpring`, y cuatro `useTransform`.
+  - `useMotionStyle` escribe solo cuatro variables CSS en el escenario (`--open`, `--veil`, `--read` y `--turn`). El CSS decide qué mueve cada una.
+  - No hay re-renders ni estilos por elemento desde JS.
+- **El festón** es un `clip-path: polygon()` de 96 puntos generado desde la geometría de seal.json (`app/lib/festoon.ts`, con tests).
+  - El radio es `var(--r)`, así que el mismo polígono sirve para el sello quieto (en %) y para la ventana que crece (en largos).
+  - El giro se hace con `rotate` en el contenedor y la foto gira al revés, así que queda casi quieta. El polígono no se recalcula en cada frame.
+- **Mejora progresiva:**
+  - La escena existe solo con `@media (scripting: enabled) and (prefers-reduced-motion: no-preference)`.
+  - Sin JS o con movimiento reducido, la misma pieza queda quieta: título, foto en el sello y manifiesto en Tostado, completo.
+  - Las variables iniciales se prerenderizan con el estado de arranque, así que no hay salto al hidratar.
+- **Medido:** en m390 y d1440, 60 fps (frames de 16,7 ms) recorriendo la escena con la CPU 4× más lenta y ninguno de más de 50 ms. CLS 0 al cargar.
+- **Foto:** `medialunas-manteca.jpg` con el preset `scene` (hasta 1616 px, el ancho del original). En pantallas de 2× se ve algo blanda, porque no hay un original más grande; el velo lo disimula.
+
+**Valores:** filete y nombre se revelan con CSS scroll-driven (`view-timeline`), sin JS. Sin soporte, quedan quietos y completos.
+
+**Marquesina**
+- Motion la mueve con un loop de `frame.update` que corre solo mientras la banda está en pantalla.
+- La velocidad del scroll (`useVelocity` + `useSpring`) la acelera hasta 7× y la inclina hasta 7°. Al subir, cambia de sentido.
+- Con el cursor encima frena con resorte, en lugar de cortar de golpe.
+- Sin JS sigue la animación CSS anterior. Con movimiento reducido queda quieta.
+
+**Presupuesto:** el JS inicial pasó de 136,4 a 138,6 KB gz, con un límite de 140. Si la próxima sección lo excede, la escena se puede pasar a un chunk diferido (`React.lazy`), porque está debajo del pliegue.

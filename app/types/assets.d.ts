@@ -19,4 +19,9 @@ declare module "*?preset=plate" {
   export default picture;
 }
 
+declare module "*?preset=scene" {
+  const picture: ImgPicture;
+  export default picture;
+}
+
 declare const __BUILD_YEAR__: number;

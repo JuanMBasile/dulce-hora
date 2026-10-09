@@ -1,0 +1,372 @@
+/* "Nuestra historia". La base es la composición quieta (sin JavaScript o con movimiento
+   reducido): título, la foto recortada con el festón del sello y el manifiesto.
+   Con JavaScript y movimiento, la misma pieza se vuelve una escena fija que el scroll
+   recorre: Motion escribe --open, --veil, --read y --turn en el escenario. */
+
+.section {
+  overflow-x: clip;
+}
+
+.accent {
+  color: var(--rojo);
+}
+
+/* ---------- Composición quieta ---------- */
+/* El margen inferior deja lugar al festón del bloque siguiente, para que no muerda la foto. */
+.scene {
+  padding-block: var(--section-y) var(--space-xl);
+}
+
+.stage {
+  display: grid;
+  gap: var(--space-xl);
+  width: min(100% - 2 * var(--gutter), var(--page-max));
+  margin-inline: auto;
+}
+
+.title {
+  font-size: var(--step-4);
+  line-height: 0.92;
+}
+
+.titleWord {
+  display: inline-block;
+}
+
+.art {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 30rem);
+  aspect-ratio: 1;
+}
+
+.rim,
+.window {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--festoon);
+}
+
+/* El borde rojo asoma alrededor de la foto, como el festón del sello. */
+.rim {
+  --r: 50%;
+  background: var(--rojo);
+}
+
+.window {
+  --r: 46.5%;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+}
+
+.picture,
+.img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.img {
+  object-fit: cover;
+}
+
+.veil {
+  display: none;
+}
+
+.manifesto {
+  max-width: 21ch;
+  font-size: var(--step-3);
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+}
+
+.word[data-accent] {
+  color: var(--rojo);
+  font-style: italic;
+}
+
+@media (min-width: 64rem) {
+  .stage {
+    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    column-gap: var(--space-2xl);
+    align-items: center;
+  }
+
+  .title {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- La escena fija ---------- */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  /* La altura extra es el recorrido del scroll mientras el escenario queda fijo. */
+  .scene {
+    height: 340svh;
+    padding: 0;
+  }
+
+  .stage {
+    /* Radio del festón: arranca como un sello y termina cubriendo la pantalla entera
+       (media diagonal dividida por la relación valle/cresta, 0,926, con margen). */
+    --r0: min(31vw, 13rem, 19svh);
+    --r1: calc(hypot(100vw, 100svh) / 1.84);
+    --rr: calc(var(--r0) + (var(--r1) - var(--r0)) * var(--open));
+    --push: calc((var(--rr) - var(--r0)) * 1.07);
+    position: sticky;
+    inset-block-start: var(--header-h);
+    display: block;
+    width: auto;
+    height: calc(100svh - var(--header-h));
+    overflow: clip;
+  }
+
+  /* El festón gira con el scroll; la foto gira al revés, así que queda casi quieta. */
+  .art {
+    position: absolute;
+    inset: 0;
+    /* justify-self también alinea cajas absolutas: con `center` el ancho colapsa a 0. */
+    justify-self: stretch;
+    width: auto;
+    aspect-ratio: auto;
+    rotate: var(--turn);
+  }
+
+  .rim {
+    --r: calc(var(--rr) * 1.07);
+  }
+
+  .window {
+    --r: var(--rr);
+  }
+
+  /* Cubre la pantalla aunque le quede un resto de giro (−9° → 0°). */
+  .photo {
+    inset: -4%;
+    rotate: calc(var(--turn) * -0.94);
+    scale: calc(1.18 - 0.18 * var(--open));
+  }
+
+  .veil {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgb(34 20 15 / 0.76), rgb(34 20 15 / 0.62) 70%);
+    opacity: var(--veil);
+  }
+
+  /* El título flanquea el sello y el festón, al crecer, lo empuja fuera de cuadro. */
+  .title {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-rows: 1fr calc(var(--r0) * 2.14 + 1rem) 1fr;
+    justify-items: center;
+    font-size: min(20vw, 9rem, 11svh);
+    pointer-events: none;
+  }
+
+  .titleWord {
+    opacity: calc(1 - var(--veil));
+  }
+
+  .titleWord[data-side="start"] {
+    align-self: end;
+    translate: 0 calc(var(--push) * -1);
+  }
+
+  .titleWord[data-side="end"] {
+    grid-row: 3;
+    align-self: start;
+    translate: 0 var(--push);
+  }
+
+  .reading {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: var(--gutter);
+    opacity: var(--veil);
+  }
+
+  .manifesto {
+    max-width: 19ch;
+    color: var(--harina);
+    font-size: clamp(1.875rem, 1rem + 3.6vw, 4.5rem);
+  }
+
+  /* Cada palabra se enciende cuando le llega la lectura, con un fundido de dos palabras. */
+  .word {
+    --lit: clamp(0, (var(--read) * (var(--n) + 2) - var(--i)) / 2, 1);
+    opacity: calc(0.24 + 0.76 * var(--lit));
+  }
+
+  .word[data-accent] {
+    color: var(--almibar);
+  }
+
+  @media (orientation: landscape) {
+    .title {
+      grid-template-rows: none;
+      grid-template-columns: 1fr calc(var(--r0) * 2.14 + 2.5rem) 1fr;
+      align-items: center;
+      font-size: min(9vw, 16svh);
+    }
+
+    .titleWord[data-side="start"] {
+      justify-self: end;
+      align-self: center;
+      translate: calc(var(--push) * -1) 0;
+    }
+
+    .titleWord[data-side="end"] {
+      grid-row: auto;
+      grid-column: 3;
+      justify-self: start;
+      align-self: center;
+      translate: var(--push) 0;
+    }
+  }
+}
+
+/* ---------- Origen, valores y cierre ---------- */
+/* El bloque sube sobre la foto con el festón del sello mordiendo su borde. */
+.body {
+  z-index: 1;
+  padding-block: var(--section-y);
+  background: var(--superficie);
+}
+
+.bodyInner {
+  display: grid;
+  gap: var(--space-2xl);
+}
+
+.origin {
+  display: grid;
+  gap: var(--space-m);
+}
+
+.originTitle {
+  max-width: 11ch;
+  font-size: var(--step-3);
+}
+
+.originText {
+  max-width: var(--measure);
+  font-size: var(--step-1);
+  line-height: 1.5;
+}
+
+.valuesTitle {
+  color: var(--rojo);
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  font-weight: 700;
+  font-stretch: 100%;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-ui);
+}
+
+.valueList {
+  margin-block-start: var(--space-s);
+}
+
+.value {
+  position: relative;
+  display: grid;
+  view-timeline: --value block;
+  gap: var(--space-2xs) var(--space-xl);
+  padding-block: var(--space-m) var(--space-l);
+}
+
+/* Filete superior: se dibuja de izquierda a derecha al entrar (ver más abajo). */
+.value::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--linea-fuerte);
+  transform-origin: left center;
+}
+
+.valueName {
+  overflow: clip;
+  padding-block: 0.04em 0.12em;
+  margin-block: -0.04em -0.12em;
+  font-size: var(--step-4);
+  line-height: 0.9;
+}
+
+.valueNameInner {
+  display: inline-block;
+}
+
+.valueText {
+  max-width: 30ch;
+  font-size: var(--step-1);
+  line-height: 1.4;
+}
+
+.closing {
+  max-width: 19ch;
+  font-size: var(--step-3);
+  font-style: italic;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+}
+
+@media (min-width: 48rem) {
+  .value {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 26rem);
+    align-items: end;
+  }
+}
+
+@media (min-width: 64rem) {
+  .origin {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 36rem);
+    align-items: start;
+  }
+
+  .closing {
+    justify-self: end;
+  }
+}
+
+/* Los valores se revelan con el scroll mismo (sin JS): el filete se dibuja y el nombre
+   sube detrás de su máscara. Sin soporte, quedan quietos y completos. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .value::before {
+      animation: draw linear both;
+      animation-timeline: --value;
+      animation-range: entry 0% cover 30%;
+    }
+
+    .valueNameInner {
+      animation: rise var(--ease-out-quart) both;
+      animation-timeline: --value;
+      animation-range: entry 15% cover 35%;
+    }
+  }
+}
+
+@keyframes draw {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    translate: 0 105%;
+  }
+}

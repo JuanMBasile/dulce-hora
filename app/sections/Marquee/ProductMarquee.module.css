@@ -42,9 +42,10 @@
   opacity: 0.9;
 }
 
-/* Corre siempre hacia la izquierda, lineal, como un cartel. Se detiene si el cursor
-   se apoya encima, para poder leer. Sin movimiento, queda quieto y recortado. */
-@media (prefers-reduced-motion: no-preference) {
+/* Con JavaScript, Motion mueve la pista (ver ProductMarquee.tsx). Sin JavaScript corre
+   hacia la izquierda, lineal, como un cartel, y se detiene con el cursor encima.
+   Sin movimiento, queda quieta y recortada. */
+@media (scripting: none) and (prefers-reduced-motion: no-preference) {
   .track {
     animation: marquee 55s linear infinite;
   }

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { moments } from "../../app/data/products";
+import { story } from "../../app/data/story";
 
 // El HTML prerenderizado tiene que traer el contenido real, sin depender de JS.
 // Este spec crece en cada hito (ver plan, sección 7).
@@ -86,6 +87,17 @@ test.describe("HTML prerenderizado (sin ejecutar JS)", () => {
     expect(main).not.toMatch(/<[a-z]+[^>]*\shidden(=""|\s|\/?>)/);
   });
 
+  test("trae la historia completa: manifiesto, origen, valores y cierre", () => {
+    // El manifiesto se parte en una palabra por span para encenderlas con el scroll.
+    const text = html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+    expect(text).toContain(story.manifesto);
+    expect(text).toContain(story.closing);
+    expect(html).toContain(story.origin);
+    expect(headings(html, 3)).toEqual(expect.arrayContaining([story.originTitle, story.valuesTitle]));
+    expect(headings(html, 4)).toEqual(expect.arrayContaining(story.values.map((value) => value.name)));
+    for (const value of story.values) expect(html).toContain(value.text);
+  });
+
   test("trae los enlaces de navegación, los CTA y los contactos reales", () => {
     for (const item of NAV) {
       expect(html).toContain(`href="${item.href}"`);
@@ -145,6 +157,22 @@ test.describe("Página con JavaScript desactivado", () => {
       const items = moment.categories.flatMap((category) => category.items);
       await expect(panel.getByRole("listitem")).toHaveText(items);
       for (const item of await panel.getByRole("listitem").all()) await expect(item).toBeVisible();
+    }
+  });
+
+  test("la historia queda quieta, completa y visible", async ({ page }) => {
+    await page.goto("/");
+    const section = page.locator("#historia");
+    // Sin JS no hay escena fija: la sección mide lo que su contenido.
+    expect(await section.evaluate((element) => element.firstElementChild!.getBoundingClientRect().height)).toBeLessThan(1600);
+    await expect(section.getByRole("heading", { level: 2, name: "Nuestra historia" })).toBeVisible();
+    await expect(section.getByRole("img", { name: /Medialunas de manteca/ })).toBeVisible();
+    await section.getByText(story.manifesto).scrollIntoViewIfNeeded();
+    await expect(section.getByText(story.manifesto)).toBeVisible();
+    expect(await section.getByText(story.manifesto).evaluate((element) => getComputedStyle(element).color)).toBe("rgb(34, 20, 15)");
+    for (const value of story.values) {
+      await expect(section.getByRole("heading", { level: 4, name: value.name })).toBeVisible();
+      await expect(section.getByText(value.text)).toBeVisible();
     }
   });
 

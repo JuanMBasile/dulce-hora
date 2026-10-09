@@ -10,6 +10,8 @@ const PRESETS: Record<string, Record<string, string>> = {
   thumb: { w: "320;480;640", format: FORMATS, as: "picture" },
   // Recorte cuadrado para la esfera del dial de productos (los originales tienen 1080 px de alto).
   plate: { w: "320;480;720;960", aspect: "1:1", fit: "cover", format: FORMATS, as: "picture" },
+  // Foto de la escena de Historia, a pantalla completa: llega al ancho del original (1616 px).
+  scene: { w: "640;960;1280;1616", format: FORMATS, as: "picture" },
 };
 
 export default defineConfig({
