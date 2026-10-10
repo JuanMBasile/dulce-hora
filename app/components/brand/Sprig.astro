@@ -1,0 +1,10 @@
+---
+import isotype from "./geometry/isotype.json";
+
+type Props = { class?: string };
+
+// La ramita del sello, sola: separador de la marquesina y marca del vacío del buscador.
+const { class: className } = Astro.props;
+---
+
+<svg class={className} viewBox="20 29 60 44" aria-hidden="true" focusable="false"><path d={isotype.sprig}></path></svg>

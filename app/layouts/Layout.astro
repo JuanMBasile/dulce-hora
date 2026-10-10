@@ -1,0 +1,60 @@
+---
+import bricolageUrl from "~/assets/fonts/bricolage-grotesque-dh.woff2?url";
+import SiteFooter from "~/components/SiteFooter/SiteFooter.astro";
+import SiteHeader from "~/components/SiteHeader/SiteHeader.astro";
+import { site } from "~/data/site";
+import "~/styles/tokens.css";
+import "~/styles/fonts.css";
+import "~/styles/global.css";
+
+type Props = {
+  title: string;
+  description: string;
+  /** Ruta canónica, sin dominio. */
+  path?: string;
+  noindex?: boolean;
+};
+
+const { title, description, path = "/", noindex = false } = Astro.props;
+const canonical = new URL(path, site.url).href;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d50d17" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <!-- Única fuente precargada: la de titulares, que dibuja el H1. -->
+    <link rel="preload" href={bricolageUrl} as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Con JavaScript, las entradas al hacer scroll arrancan ocultas; sin él, todo queda a la vista. -->
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <SiteHeader />
+    <main id="contenido" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter />
+    <script>
+      import "~/scripts/motion";
+    </script>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+---
+import sealUrl from "~/assets/brand/sello.svg";
+import Signature from "~/components/brand/Signature.astro";
+import ButtonLink from "~/components/ButtonLink/ButtonLink.astro";
+import { nav, primaryCta, sections, site } from "~/data/site";
+import styles from "./SiteHeader.module.css";
+---
+
+<!--
+  Isla flotante (skill landing-page-design, B7): una píldora de vidrio despegada del borde.
+  En el celular, la hamburguesa se transforma en una X y abre un menú de vidrio a pantalla
+  completa cuyos enlaces suben de a uno. Sin JavaScript, los enlaces quedan a la vista.
+-->
+<header class={styles.header} data-header>
+  <div class={styles.island}>
+    <a href={`#${sections.inicio}`} class={styles.brand}>
+      <Signature class={styles.signature} />
+      <span class="visually-hidden">Dulce Hora, ir al inicio</span>
+    </a>
+
+    <nav aria-label="Principal" class={styles.nav}>
+      <span class={styles.indicator} aria-hidden="true" data-nav-indicator></span>
+      <ul role="list" class={styles.links}>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href} class={styles.link} data-nav-link>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <ButtonLink href={primaryCta.href} class={styles.cta}>{primaryCta.label}</ButtonLink>
+
+    <button
+      type="button"
+      class={styles.toggle}
+      aria-expanded="false"
+      aria-controls="menu"
+      aria-label="Abrir el menú"
+      data-menu-toggle
+    >
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </button>
+  </div>
+</header>
+
+<div id="menu" class={styles.menu} data-menu inert>
+  <nav aria-label="Menú" class={styles.menuNav}>
+    <ul role="list" class={styles.menuLinks}>
+      {
+        nav.map((item, index) => (
+          <li class={styles.menuItem} style={`--i: ${index}`}>
+            <a href={item.href} class={styles.menuLink} data-menu-link>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <div class={styles.menuItem} style={`--i: ${nav.length}`}>
+    <ButtonLink href={primaryCta.href} data-menu-link>{primaryCta.label}</ButtonLink>
+    <p class={styles.menuNote}>{site.reach}</p>
+  </div>
+  <img class={styles.menuSeal} src={sealUrl.src} alt="" width="400" height="400" loading="lazy" decoding="async" />
+</div>
+
+<script>
+  import { initHeader } from "./header";
+
+  initHeader();
+</script>

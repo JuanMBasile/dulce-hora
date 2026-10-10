@@ -42,7 +42,7 @@
   opacity: 0.9;
 }
 
-/* Con JavaScript, Motion mueve la pista (ver ProductMarquee.tsx). Sin JavaScript corre
+/* Con JavaScript, marquee.ts mueve la pista. Sin JavaScript corre
    hacia la izquierda, lineal, como un cartel, y se detiene con el cursor encima.
    Sin movimiento, queda quieta y recortada. */
 @media (scripting: none) and (prefers-reduced-motion: no-preference) {

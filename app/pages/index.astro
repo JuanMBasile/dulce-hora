@@ -1,0 +1,36 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import { sections, site } from "~/data/site";
+import { organizationJsonLd } from "~/lib/seo";
+import Branches from "~/sections/Branches/Branches.astro";
+import ProductMarquee from "~/sections/Marquee/ProductMarquee.astro";
+import Paseo from "~/sections/Paseo/Paseo.astro";
+import Story from "~/sections/Story/Story.astro";
+import styles from "./_home.module.css";
+
+const jsonLd = JSON.stringify(organizationJsonLd()).replaceAll("<", "\\u003c");
+---
+
+<Layout title={site.title} description={site.description}>
+  <script slot="head" type="application/ld+json" set:html={jsonLd} />
+
+  <Paseo />
+  <ProductMarquee />
+  <Story />
+  <Branches />
+
+  <section
+    id={sections.franquicias}
+    tabindex="-1"
+    class:list={["surface-tostado", styles.section, styles.colored]}
+    aria-labelledby="franquicias-titulo"
+  >
+    <div class="page-width" data-reveal>
+      <h2 id="franquicias-titulo" class={styles.heading}>Abrí tu propio Dulce Hora</h2>
+      <p class={styles.intro}>
+        Sé parte de una marca en crecimiento. Nuestro modelo de franquicia te permite emprender con el respaldo de un
+        equipo con experiencia y una marca reconocida.
+      </p>
+    </div>
+  </section>
+</Layout>

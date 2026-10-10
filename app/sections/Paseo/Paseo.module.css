@@ -1,0 +1,676 @@
+/* Paseo "Un día en Dulce Hora" (Paseo.astro). El escenario es sticky y ocupa la pantalla;
+   las paradas lo cubren con su texto y marcan cuánto scroll dura cada una. */
+
+.world {
+  position: relative;
+  background: var(--tostado);
+  color: var(--harina);
+  --foco: var(--almibar);
+}
+
+/* ---------- Escenario ---------- */
+.stage {
+  position: sticky;
+  inset-block-start: 0;
+  height: 100lvh;
+  overflow: clip;
+  background: var(--tostado);
+}
+
+.frames {
+  position: absolute;
+  inset: 0;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+}
+
+.picture,
+.photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.photo {
+  object-fit: cover;
+  object-position: var(--focus-x) 50%;
+}
+
+/* La primera foto se asienta al cargar, antes de que el scroll la mueva. */
+.frame:first-child .photo {
+  animation: settle var(--dur-hero) var(--ease-fluid) both;
+}
+
+.clips {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1200ms var(--ease-fluid);
+}
+
+.stage[data-mode="video"] .clips {
+  opacity: 1;
+}
+
+/* Solo se ve el clip del tramo actual: comparte fotograma con el siguiente. */
+.clip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--focus-x) 50%;
+  visibility: hidden;
+}
+
+.clip[data-shown] {
+  visibility: visible;
+}
+
+/* Velos: el texto se lee sobre cualquier foto. Abajo en el celular, a la izquierda en escritorio. */
+.veilTop {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 10rem;
+  background: linear-gradient(rgb(34 20 15 / 0.55), transparent);
+  pointer-events: none;
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(34 20 15 / 0.96) 12%,
+    rgb(34 20 15 / 0.62) 46%,
+    rgb(34 20 15 / 0) 78%
+  );
+  pointer-events: none;
+}
+
+/* ---------- Sello-reloj ---------- */
+.stamp {
+  position: absolute;
+  inset-block-start: calc(env(safe-area-inset-top, 0px) + 6rem);
+  inset-inline-end: var(--gutter);
+  width: clamp(6rem, 4rem + 8vw, 11rem);
+  rotate: -8deg;
+  animation: stamp 820ms var(--ease-stamp) 460ms both;
+}
+
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  box-shadow:
+    0 18px 30px -10px rgb(0 0 0 / 0.5),
+    0 4px 10px -4px rgb(0 0 0 / 0.35);
+}
+
+.stampTurn {
+  position: relative;
+}
+
+.seal {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* El arco rojo se dibuja como una aguja que da la vuelta. */
+.arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1100ms var(--ease-fluid) 900ms forwards;
+}
+
+/* ---------- Raíl de paradas ---------- */
+.rail {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--gutter);
+  display: none;
+  translate: 0 -50%;
+}
+
+.railList {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-s);
+}
+
+.railLine {
+  position: absolute;
+  box-shadow: 0 0 0 1px rgb(34 20 15 / 0.12);
+  inset-block: 0.75rem;
+  inset-inline-end: calc(0.75rem - 0.5px);
+  width: 1px;
+  background: rgb(255 255 255 / 0.25);
+}
+
+.railFill {
+  position: absolute;
+  inset: 0;
+  background: var(--almibar);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.railLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 1.5rem;
+  border-radius: var(--radius-pill);
+  color: var(--harina);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: var(--tracking-ui);
+  text-decoration: none;
+}
+
+.railLabel {
+  display: inline-flex;
+  gap: 0.5em;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: rgb(34 20 15 / 0.55);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  white-space: nowrap;
+  opacity: 0;
+  translate: 0.5rem 0;
+  transition:
+    opacity var(--dur-fluid) var(--ease-fluid),
+    translate var(--dur-fluid) var(--ease-fluid);
+}
+
+.railHour {
+  color: rgb(255 255 255 / 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.railDot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.railDot::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.55);
+  transition:
+    background-color var(--dur-fluid) var(--ease-fluid),
+    scale var(--dur-fluid) var(--ease-fluid);
+}
+
+.railLink:hover .railLabel,
+.railLink:focus-visible .railLabel,
+.railLink[aria-current="true"] .railLabel {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.railLink:hover .railDot::before {
+  background: var(--harina);
+}
+
+.railLink[aria-current="true"] .railDot::before {
+  background: var(--almibar);
+  scale: 1.5;
+}
+
+/* El momento de la hora local lleva un anillo. */
+.railLink[data-now] .railDot::after {
+  content: "";
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--almibar);
+}
+
+.hint {
+  position: absolute;
+  inset-block-end: var(--space-xl);
+  inset-inline-end: var(--gutter);
+  display: none;
+  align-items: center;
+  gap: var(--space-xs);
+  color: rgb(255 255 255 / 0.75);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hintLine {
+  position: relative;
+  width: 1px;
+  height: 2rem;
+  overflow: clip;
+  background: rgb(255 255 255 / 0.25);
+}
+
+.hintLine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--harina);
+  animation: hint 2400ms var(--ease-fluid) infinite;
+}
+
+/* ---------- Paradas ---------- */
+.stops {
+  position: relative;
+  z-index: 1;
+  margin-block-start: -100lvh;
+  /* La capa de las paradas cubre el escenario: solo su texto recibe clics, así el raíl y
+     el reloj de abajo siguen respondiendo. */
+  pointer-events: none;
+}
+
+.stop {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 190svh;
+  pointer-events: none;
+}
+
+.stop:first-child {
+  min-height: 160svh;
+}
+
+.body {
+  position: sticky;
+  inset-block-end: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 44rem;
+  padding: 8rem var(--gutter) calc(env(safe-area-inset-bottom, 0px) + var(--space-xl));
+  pointer-events: auto;
+}
+
+/* Con JavaScript, el texto de una parada aparece cuando llega su turno, línea por línea. */
+:global(.js) .body > * {
+  opacity: 0;
+  translate: 0 2rem;
+  transition:
+    opacity 700ms var(--ease-fluid),
+    translate 700ms var(--ease-fluid);
+}
+
+:global(.js) .stop[data-current] .body > *,
+:global(.js) .body:focus-within > * {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: 1000ms;
+}
+
+.stop[data-current] .body > :nth-child(2) {
+  transition-delay: 60ms;
+}
+
+.stop[data-current] .body > :nth-child(3) {
+  transition-delay: 120ms;
+}
+
+.stop[data-current] .body > :nth-child(4) {
+  transition-delay: 180ms;
+}
+
+.stop[data-current] .body > :nth-child(5) {
+  transition-delay: 240ms;
+}
+
+:global(.js) .stop:not([data-current]) .body:not(:focus-within) {
+  pointer-events: none;
+}
+
+.count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgb(255 255 255 / 0.72);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.countDot {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background: var(--almibar);
+}
+
+.now {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--almibar);
+  color: var(--tostado);
+  letter-spacing: 0.08em;
+}
+
+.now[hidden] {
+  display: none;
+}
+
+/* ---------- Entrada ---------- */
+.title {
+  max-width: 11ch;
+  margin-block-start: var(--space-s);
+  font-size: clamp(3rem, 1.6rem + 6vw, 6rem);
+  line-height: 0.92;
+  letter-spacing: -0.018em;
+}
+
+/* Cada palabra sube desde atrás de una máscara, con una leve inclinación que se endereza. */
+.word {
+  display: inline-block;
+  overflow: clip;
+  padding-block: 0.04em 0.14em;
+  margin-block: -0.04em -0.14em;
+  vertical-align: top;
+}
+
+.wordInner {
+  display: inline-block;
+  transform-origin: 0 100%;
+  animation: rise 950ms var(--ease-fluid) both;
+  animation-delay: calc(90ms + var(--i, 0) * 55ms);
+}
+
+.wordInner[data-accent] {
+  color: var(--almibar);
+}
+
+.lead {
+  max-width: 32rem;
+  margin-block-start: var(--space-m);
+  font-size: var(--step-1);
+  line-height: 1.42;
+  color: rgb(255 255 255 / 0.9);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-m);
+  margin-block-start: var(--space-l);
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.45);
+  color: var(--harina);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: var(--tracking-ui);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fluid) var(--ease-fluid),
+    color var(--dur-fluid) var(--ease-fluid),
+    scale var(--dur-press) var(--ease-out-quart);
+}
+
+.ghost:hover {
+  background: var(--harina);
+  color: var(--tostado);
+}
+
+.ghost:active {
+  scale: 0.98;
+}
+
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-m);
+  margin-block-start: var(--space-m);
+  color: rgb(255 255 255 / 0.75);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  letter-spacing: var(--tracking-ui);
+}
+
+/* ---------- Reloj ---------- */
+.clock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 2.75rem;
+  padding: 0.25rem 0.875rem 0.25rem 0.375rem;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  color: var(--harina);
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color var(--dur-fluid) var(--ease-fluid);
+}
+
+.clock[hidden] {
+  display: none;
+}
+
+.clock:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+
+.dial {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--harina);
+}
+
+.hand {
+  position: absolute;
+  inset-block-end: 50%;
+  inset-inline-start: calc(50% - 1px);
+  width: 2px;
+  border-radius: 1px;
+  background: var(--tostado);
+  transform-origin: 50% 100%;
+  transition: rotate 1200ms var(--ease-stamp);
+}
+
+.hourHand {
+  height: 28%;
+}
+
+.minuteHand {
+  height: 40%;
+  background: var(--rojo);
+}
+
+/* ---------- Momentos ---------- */
+.heading {
+  max-width: 14ch;
+  margin-block-start: var(--space-s);
+  font-size: clamp(2.5rem, 1.6rem + 4vw, 4.5rem);
+}
+
+.categories {
+  display: grid;
+  gap: var(--space-s) var(--space-l);
+  margin-block-start: var(--space-l);
+  max-width: 40rem;
+}
+
+.category {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding-block-start: var(--space-xs);
+  border-top: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.categoryName {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 700;
+  font-stretch: 100%;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-ui);
+}
+
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  color: rgb(255 255 255 / 0.78);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+/* Los productos se leen como una línea: "Manteca · Grasa". */
+.items li:not(:last-child)::after {
+  content: "·";
+  padding-inline: 0.4em;
+  color: rgb(255 255 255 / 0.45);
+}
+
+@media (min-width: 40rem) {
+  .categories {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .veil {
+    background: linear-gradient(
+      to right,
+      rgb(34 20 15 / 0.92) 0%,
+      rgb(34 20 15 / 0.55) 38%,
+      rgb(34 20 15 / 0) 68%
+    );
+  }
+
+  .veil::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(to top, rgb(34 20 15 / 0.7), transparent);
+  }
+
+  .rail {
+    display: block;
+  }
+
+  .hint {
+    display: flex;
+  }
+
+  .stamp {
+    inset-block-start: auto;
+    inset-block-end: var(--space-xl);
+    inset-inline-end: calc(var(--gutter) + 17rem);
+  }
+
+  .body {
+    padding-inline-start: max(var(--gutter), calc((100vw - var(--page-max)) / 2));
+    padding-block-end: var(--space-2xl);
+  }
+}
+
+/* Sin JavaScript el escenario no se mueve: queda la primera foto y el texto de cada parada. */
+@media (scripting: none) {
+  .stop,
+  .stop:first-child {
+    min-height: 100svh;
+  }
+}
+
+@keyframes settle {
+  from {
+    scale: 1.12;
+  }
+}
+
+@keyframes rise {
+  from {
+    translate: 0 108%;
+    rotate: 7deg;
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    scale: 1.5;
+    rotate: -32deg;
+  }
+
+  60% {
+    opacity: 1;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hint {
+  from {
+    translate: 0 -100%;
+  }
+
+  to {
+    translate: 0 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame:first-child .photo,
+  .wordInner,
+  .stamp,
+  .hintLine::after {
+    animation: none;
+  }
+
+  .arc {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .hand {
+    transition: none;
+  }
+
+  :global(.js) .body > * {
+    translate: none;
+  }
+}

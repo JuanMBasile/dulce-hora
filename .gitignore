@@ -2,8 +2,8 @@
 node_modules/
 
 # Build y tipos generados
-build/
-.react-router/
+dist/
+.astro/
 .vite/
 
 # Tests y mediciones

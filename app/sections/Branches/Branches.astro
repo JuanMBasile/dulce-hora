@@ -1,0 +1,116 @@
+---
+import ButtonLink from "~/components/ButtonLink/ButtonLink.astro";
+import { branches, regions } from "~/data/branches";
+import { sections, site } from "~/data/site";
+import { describeResults, groupBranches, indexBranches } from "~/lib/branches";
+import { mapsSearchUrl } from "~/lib/urls";
+import BranchConstellation from "./BranchConstellation.astro";
+import { boardHTML, icon, odometerHTML } from "./board";
+import styles from "./Branches.module.css";
+
+const INDEX = indexBranches(branches);
+const groups = groupBranches(INDEX);
+// En el sello, las sucursales siguen el orden del listado: cada zona ocupa un tramo del festón.
+const RING = groups.flatMap((group) => group.areas.flatMap((area) => area.branches));
+// Solo las zonas que tienen sucursales en el listado.
+const REGIONS = regions.filter((region) => branches.some((branch) => branch.region === region.id));
+const chips = [
+  { id: "todas", label: "Todas", count: branches.length },
+  ...REGIONS.map((region) => ({ id: region.id, label: region.chip, count: INDEX.filter((b) => b.region === region.id).length })),
+];
+// Sin coordenadas propias, "cerca de mí" lo resuelve Maps con la ubicación del visitante.
+const NEAREST_URL = mapsSearchUrl("Dulce Hora panadería");
+const status = describeResults(branches.length, null, "");
+---
+
+<!--
+  "Panaderías cerca de casa": buscador de sucursales. Se busca por barrio, calle, altura o
+  ciudad, sin importar tildes; los filtros de zona cuentan lo que encuentra la búsqueda y cada
+  dirección abre la ficha del local en Google Maps. Arriba del listado, las sucursales forman
+  el sello y su centro, una moneda, muestra la sucursal elegida.
+  Sin JavaScript, el listado completo queda visible y agrupado; el buscador, los filtros y el
+  tambor de barrios aparecen solo con JavaScript.
+-->
+<section
+  id={sections.sucursales}
+  tabindex="-1"
+  class:list={["surface-rojo festoon-top", styles.section]}
+  aria-labelledby="sucursales-titulo"
+  data-branches
+>
+  <div class:list={["page-width", styles.layout]}>
+    <header class={styles.header} data-reveal>
+      <h2 id="sucursales-titulo" class={styles.title}>
+        <span class={styles.titleInner}>Panaderías cerca de casa</span>
+      </h2>
+      <p class={styles.lead}>{site.reach}</p>
+    </header>
+
+    <BranchConstellation branches={RING} />
+
+    <div class={styles.aside}>
+      <p class={styles.drumLine} aria-hidden="true" data-drum-line>
+        <span class={styles.drumLead}>Estamos en</span>{" "}
+        <span class={styles.drum} data-drum><span class={styles.drumIn} data-first>tu barrio</span></span>
+      </p>
+
+      <div class={styles.finder}>
+        <form role="search" class={styles.search} data-search>
+          <label for="sucursales-busqueda" class={styles.label}>Buscá por barrio, calle o ciudad</label>
+          <div class={styles.field}>
+            <Fragment set:html={icon("search", styles.searchIcon)} />
+            <input
+              id="sucursales-busqueda"
+              class={styles.input}
+              type="search"
+              placeholder="Caballito, Av. San Juan, Rosario…"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="search"
+              aria-describedby="sucursales-estado"
+              data-query
+            />
+            <button type="button" class={styles.clear} aria-label="Borrar la búsqueda" data-clear hidden>
+              <Fragment set:html={icon("clear")} />
+            </button>
+          </div>
+        </form>
+
+        <div class={styles.chips} role="group" aria-label="Zona" data-chips>
+          <span class={styles.pill} aria-hidden="true"></span>
+          {
+            chips.map((chip) => (
+              <button type="button" class={styles.chip} data-chip={chip.id} data-active={chip.id === "todas" || undefined}>
+                {chip.label} <span class={styles.chipCount}>{chip.count}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <p class={styles.count} aria-hidden="true">
+        <span class={styles.odometer} data-odometer set:html={odometerHTML(branches.length)} />
+        <span class={styles.countText}>
+          <span class={styles.countLabel} data-count-label>sucursales</span>
+          <span class={styles.countContext} data-count-context></span>
+        </span>
+      </p>
+      <p id="sucursales-estado" class="visually-hidden" role="status" data-status>{status}</p>
+
+      <ButtonLink href={NEAREST_URL} variant="inverse" rel="noopener" class={styles.nearest}>
+        <Fragment set:html={icon("pin", styles.nearestIcon)} />
+        Cerca de mí, en Google Maps
+      </ButtonLink>
+    </div>
+
+    <div class:list={["festoon-top", styles.board]}>
+      <div class={styles.boardBody} data-board set:html={boardHTML({ groups, tokens: [], query: "", elsewhere: 0, where: null })} />
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initBranches } from "./branches-client";
+
+  initBranches();
+</script>

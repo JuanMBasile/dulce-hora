@@ -92,7 +92,7 @@ test("el header muestra la navegación que corresponde al ancho", async ({ page 
   }
 });
 
-test("el header queda fijo y se compacta al bajar", async ({ page }) => {
+test("el header flota fijo, despegado del borde, y se compacta al bajar", async ({ page }) => {
   await gotoHydrated(page);
   const header = page.getByRole("banner");
   await expect(header).not.toHaveAttribute("data-compact");
@@ -100,5 +100,35 @@ test("el header queda fijo y se compacta al bajar", async ({ page }) => {
   await page.mouse.wheel(0, 900);
   await expect(header).toHaveAttribute("data-compact", "");
   await expect(header).toBeInViewport();
-  expect((await header.boundingBox())!.y).toBe(0);
+  // Una isla: queda a unos píxeles del borde superior, no pegada.
+  const y = (await header.boundingBox())!.y;
+  expect(y).toBeGreaterThan(4);
+  expect(y).toBeLessThan(40);
+});
+
+test("en el celular, el menú se abre a pantalla completa y se cierra con Escape o al elegir", async ({ page }) => {
+  await gotoHydrated(page);
+  test.skip(page.viewportSize()!.width >= DESKTOP_MIN_WIDTH, "En escritorio la navegación está en la isla.");
+  // El nombre cambia ("Abrir el menú" / "Cerrar el menú"): se lo ubica por lo que controla.
+  const toggle = page.locator('button[aria-controls="menu"]');
+  await expect(toggle).toHaveAccessibleName("Abrir el menú");
+  await toggle.click();
+  await expect(toggle).toHaveAccessibleName("Cerrar el menú");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const menu = page.getByRole("navigation", { name: "Menú" });
+  await expect(menu.getByRole("link", { name: "Sucursales" })).toBeVisible();
+  // El foco entra al menú y el resto de la página queda inerte.
+  await expect(menu.getByRole("link").first()).toBeFocused();
+  expect(await page.locator("main").evaluate((main) => (main as HTMLElement).inert)).toBe(true);
+
+  await page.keyboard.press("Escape");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toBeFocused();
+  expect(await page.locator("main").evaluate((main) => (main as HTMLElement).inert)).toBe(false);
+
+  await toggle.click();
+  await menu.getByRole("link", { name: "Sucursales" }).click();
+  await expect(page).toHaveURL(/#sucursales$/);
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("heading", { level: 2, name: "Panaderías cerca de casa" })).toBeInViewport({ timeout: 8000 });
 });

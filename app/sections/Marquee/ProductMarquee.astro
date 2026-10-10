@@ -1,0 +1,54 @@
+---
+import Sprig from "~/components/brand/Sprig.astro";
+import styles from "./ProductMarquee.module.css";
+
+// Productos reales del catálogo oficial, como en la marquesina de un local.
+const PRODUCTS = [
+  "Medialunas de manteca",
+  "Vigilantes",
+  "Sacramentos",
+  "Chipá",
+  "Pan de campo",
+  "Alfajores de maicena",
+  "Budín marmolado",
+  "Pastafrola de membrillo",
+  "Mini Rogel",
+  "Sándwiches de miga",
+  "Tartas",
+  "Chocotorta en pote",
+  "Medialunas de grasa",
+  "Tortitas negras",
+  "Scones de queso",
+  "Mini Red Velvet",
+];
+---
+
+<!--
+  Marquesina roja con los productos. Corre sola y responde al scroll: acelera con la velocidad,
+  cambia de sentido cuando se sube y se inclina como un cartel que toma envión. Con el cursor
+  encima frena suave. Decorativa: los productos se presentan, accesibles, en el paseo.
+-->
+<div class:list={["surface-rojo festoon-top", styles.band]} aria-hidden="true" data-marquee>
+  <div class={styles.viewport}>
+    <div class={styles.track} data-marquee-track>
+      {
+        [0, 1].map(() => (
+          <ul role="list" class={styles.group}>
+            {PRODUCTS.map((product) => (
+              <li class={styles.item}>
+                {product}
+                <Sprig class={styles.sprig} />
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initMarquee } from "./marquee";
+
+  initMarquee();
+</script>

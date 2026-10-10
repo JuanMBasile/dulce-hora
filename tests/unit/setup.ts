@@ -1,13 +1,4 @@
-import { cleanup } from "@testing-library/react";
-import { MotionGlobalConfig } from "motion/react";
-import { afterEach, vi } from "vitest";
-
-// En jsdom no hay layout: las animaciones de Motion terminan al instante.
-MotionGlobalConfig.skipAnimations = true;
-
-afterEach(() => {
-  cleanup();
-});
+import { vi } from "vitest";
 
 // jsdom no implementa IntersectionObserver ni matchMedia.
 class IntersectionObserverStub {

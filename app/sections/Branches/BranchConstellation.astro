@@ -1,0 +1,70 @@
+---
+import { getImage } from "astro:assets";
+import type { IndexedBranch } from "~/lib/branches";
+import { layoutConstellation } from "~/lib/constellation";
+import coin from "./BranchCoin.module.css";
+import styles from "./BranchConstellation.module.css";
+import { coinFaceHTML, CONSTELLATION, type CoinPhoto } from "./coin";
+import { STAND_IN_PHOTOS } from "./standInPhotos";
+
+type Props = {
+  /** Sucursales en el orden en que ocupan el festón (el del listado: zona, barrio, dirección). */
+  branches: readonly IndexedBranch[];
+};
+
+const { branches } = Astro.props;
+const layout = layoutConstellation({ areas: branches.map((branch) => branch.area), ...CONSTELLATION });
+
+// Las fotos de la moneda, recortadas en cuadrado (como el dial de productos de antes).
+const WIDTHS = [320, 480, 720, 960];
+const photos: CoinPhoto[] = await Promise.all(
+  STAND_IN_PHOTOS.map(async (src) => {
+    const set = async (format: "avif" | "webp") => {
+      const images = await Promise.all(
+        WIDTHS.map((width) => getImage({ src, width, height: width, fit: "cover", format })),
+      );
+      return images.map((image, index) => `${image.src} ${WIDTHS[index]}w`).join(", ");
+    };
+    const fallback = await getImage({ src, width: 480, height: 480, fit: "cover", format: "jpg" });
+    return { avif: await set("avif"), webp: await set("webp"), src: fallback.src };
+  }),
+);
+const pct = (value: number) => `${value.toFixed(2)}%`;
+---
+
+<!--
+  "Las sucursales forman el sello", como la V de Vremont: las sucursales aparecen dispersas
+  (algunas con su barrio) y vuelan al festón, con la moneda en el centro. Ya formado, acompaña
+  al buscador. Decorativo: el listado y el estado tienen su propio texto accesible.
+-->
+<div class={styles.stage} aria-hidden="true" data-constellation data-photos={JSON.stringify(photos)}>
+  {
+    layout.labels.map((label) => {
+      const point = layout.scatter[label.slot]!;
+      return (
+        <span
+          data-label
+          class={styles.label}
+          data-side={label.side}
+          data-minor={label.rank >= 4 || undefined}
+          style={`left: ${pct(point.x)}; top: ${pct(point.y)}`}
+        >
+          {label.text}
+        </span>
+      );
+    })
+  }
+  <div data-ring class={styles.ring}>
+    {layout.ring.map((point) => <span data-dot class={styles.dot} style={`left: ${pct(point.x)}; top: ${pct(point.y)}`} />)}
+    <div class={coin.coin}>
+      <div class={coin.lift} data-coin-lift>
+        <div class={coin.tilt} data-coin-tilt>
+          <div class={coin.body} data-coin>
+            <Fragment set:html={coinFaceHTML(null, false)} />
+            <Fragment set:html={coinFaceHTML(null, true)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

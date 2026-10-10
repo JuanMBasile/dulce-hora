@@ -1,7 +1,7 @@
 /* "Nuestra historia". La base es la composición quieta (sin JavaScript o con movimiento
    reducido): título, la foto recortada con el festón del sello y el manifiesto.
    Con JavaScript y movimiento, la misma pieza se vuelve una escena fija que el scroll
-   recorre: Motion escribe --open, --veil, --read y --turn en el escenario. */
+   recorre: story.ts (GSAP) escribe --open, --veil, --read y --turn en el escenario. */
 
 .section {
   overflow-x: clip;
@@ -31,6 +31,16 @@
 
 .titleWord {
   display: inline-block;
+}
+
+/* El radio del festón como largo registrado: el navegador lo resuelve antes de usarlo en
+   el polígono. Sin registro, Chromium simplifica mal `1 * calc(a + b)` cuando el radio es
+   un calc anidado (el de la escena), y los puntos con coeficiente 1 se van al centro: el
+   festón queda cortado por cuñas. */
+@property --r {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
 }
 
 .art {
@@ -116,22 +126,28 @@
     --r1: calc(hypot(100vw, 100svh) / 1.84);
     --rr: calc(var(--r0) + (var(--r1) - var(--r0)) * var(--open));
     --push: calc((var(--rr) - var(--r0)) * 1.07);
+    /* A pantalla completa: el header flota encima, como en el paseo. */
     position: sticky;
-    inset-block-start: var(--header-h);
+    inset-block-start: 0;
     display: block;
     width: auto;
-    height: calc(100svh - var(--header-h));
+    height: 100svh;
     overflow: clip;
   }
 
   /* El festón gira con el scroll; la foto gira al revés, así que queda casi quieta. */
+  /* Un cuadrado más grande que la diagonal de la pantalla: el festón, al crecer y girar,
+     nunca toca los bordes de su caja (si los tocara, se recortaría en línea recta y las
+     esquinas del rectángulo girado asomarían como cuñas). */
   .art {
     position: absolute;
-    inset: 0;
-    /* justify-self también alinea cajas absolutas: con `center` el ancho colapsa a 0. */
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
     justify-self: stretch;
-    width: auto;
+    width: calc(var(--r1) * 2.3);
+    height: calc(var(--r1) * 2.3);
     aspect-ratio: auto;
+    translate: -50% -50%;
     rotate: var(--turn);
   }
 

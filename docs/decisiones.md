@@ -30,6 +30,8 @@ El plan nombra siete skills. Verifiqué cada una en disco; no me apoyo en ningun
 
 ## M1 · Scaffold
 
+> Histórico: desde M8 el sitio es Astro, sin React (ver al final). Lo de React Router, hidratación y chunks diferidos de M1 a M7 ya no aplica.
+
 - **Scaffold manual**, no la plantilla oficial de React Router (que trae Tailwind, Docker y `ssr: true`).
 - `react-router.config.ts`: `ssr: false` y `prerender: ["/"]`. El build genera `build/client/index.html` con el HTML completo y lo hidrata en el cliente; `build/server` se borra solo. Los flags `v8_*`, incluido `v8_viteEnvironmentApi`, compilan sin problemas con Vite 8.3.1.
 - **vitest 5.0.3 en lugar de 5.0.1.** Con 5.0.1, npm 10.9.2 falla con `Cannot read properties of null (reading 'edgesOut')`: el peer opcional `@vitest/browser-playwright` resuelve a 5.0.3, que exige vitest 5.0.3, y el árbol de peers de npm se rompe. Es el último parche de la misma línea (publicado el 2026-09-30) y no cambia la API.
@@ -223,3 +225,45 @@ Referencia: cómo muestra Vremont sus oficinas ([`referencia-vremont.md`](./refe
 **Presupuesto:** JS inicial 138,1 KB de 140 (antes de esta sección, 138,6), CSS 9,7 KB y HTML 20,8 KB.
 
 **Validación:** tsc y eslint limpios; Vitest 41/41; build y presupuesto ok; Playwright 149 pasados y 5 omitidos a propósito, en m375, m390, t768, d1440 y no-js (`branches` nuevo, con el sello; `seo-nojs` ampliado). Historia sigue pasando su spec ya diferida.
+
+
+## M8 · Astro sin React y el paseo
+
+Pedido: pasar a Astro y sacar React, y repensar las animaciones con dos skills nuevas, `landing-page-design` (Elaya) y `scroll-world` (oso95), con la landing de Arko de midudev (`midudev/mcp-higgsfield-landing`) como referencia.
+
+**Skills** (`.claude/skills/`, registradas en `skills-lock.json` con su commit)
+- `landing-page-design`: la isla flotante del header, la curva fluida (`--ease-fluid`, `cubic-bezier(0.32, 0.72, 0, 1)`), las entradas al hacer scroll con `IntersectionObserver` (suben, se enfocan y aparecen) y la frase grande que se enciende palabra por palabra (el manifiesto de Historia ya lo hacía).
+  - **No se aplicaron sus reglas de tipografía** (una sola fuente de su lista, sin itálicas, escala de Tailwind): chocan con la marca, que ya tiene Bricolage + Newsreader y el "Estamos en" en itálica. La skill dice que manda el sistema existente y el pedido del usuario. Queda anotado por si se quiere revisar.
+- `scroll-world`: el paseo de la portada. **Sin videos todavía**: la skill genera los clips con Higgsfield y Monid, servicios pagos con login interactivo que el entorno no alcanza. El motor quedó listo para recibirlos (ver abajo).
+- `vercel-react-best-practices` sigue instalada pero ya no aplica.
+
+**Stack**
+- Astro 7.3.5, estático (`dist/`). El código sigue en `app/` (`srcDir`), con el alias `~`.
+- Sin framework en el cliente: cada sección trae su script en TypeScript. GSAP + ScrollTrigger para lo que va con el scroll y Lenis para el scroll suave, como la referencia. Motion (`animateMini`, `inView`, `spring`) para los resortes del sello y la moneda.
+- Imágenes con `astro:assets` (sharp): AVIF y WebP. Las fotos de la moneda se recortan en cuadrado en el build y viajan al navegador en un `data-` de la escena.
+- **JS inicial: 65,8 KB gz** (antes 138,1 KB con React). El presupuesto bajó a 90 KB. CSS 13,4 KB, HTML 22,9 KB.
+- El listado de sucursales se dibuja con la misma función en el HTML estático y en el navegador (`board.ts`): no hay dos versiones del marcado.
+
+**El paseo "Un día en Dulce Hora"** (reemplaza el hero y el dial de productos)
+- Escenario fijo a pantalla completa; el scroll recorre el día: la entrada y los cuatro momentos del catálogo. Cada parada deja su texto abajo a la izquierda y entra línea por línea cuando le toca.
+- Modo fotos (el de la referencia mientras no cargan los clips): la foto de cada parada aparece en la segunda mitad del tramo anterior y se acerca, como una cámara que entra.
+- Raíl de paradas a la derecha (escritorio), con la parada actual en almíbar y un anillo en el momento de la hora local. El reloj ("Son las 17:30 · Buena hora para la merienda") lleva a esa parada, que muestra "Ahora".
+- El sello gira con el día, como la aguja de un reloj.
+- **Videos (scroll-world):** cada parada acepta un `clip` en `app/data/paseo.ts` (un MP4 en `public/video/` que va de su foto a la siguiente). Con clips, el motor (adaptado de `world.ts` de la referencia) los baja enteros como blob, los carga por cercanía y los scrubea con el scroll; las fotos quedan de póster. Para generarlos: correr la skill con una cuenta de Higgsfield, usando estas fotos como primer y último cuadro. Codificarlos con GOP corto (`-g 6`) y color BT.709, como dice el README de la referencia.
+- Con movimiento reducido: las fotos se funden sin acercarse y el sello no gira. Sin JavaScript: queda la primera foto y el texto de todas las paradas.
+
+**Header en isla**
+- Píldora de vidrio despegada del borde, con una píldora interna que se desliza al enlace señalado o a la sección actual (scroll spy con `IntersectionObserver`).
+- En el celular, la hamburguesa se transforma en una X y abre un menú de vidrio a pantalla completa; los enlaces suben de a uno. El resto de la página queda `inert`, Escape cierra y el foco vuelve al botón.
+
+**Historia**
+- La escena pasa de Motion a GSAP (`scrub: 0.5`) con el mismo guion y las mismas variables. Ahora ocupa la pantalla entera, con el header flotando encima.
+- **Bug de Chromium encontrado:** el festón se cortaba en cuñas a mitad de la apertura. Chromium simplifica mal `1 * calc(a + b)` cuando el radio es un calc anidado, y los puntos del polígono con coeficiente 1 se iban al centro. Pasaba también con React. Se registró `--r` con `@property` como largo, así el navegador lo resuelve antes de usarlo. Además, la caja del festón es ahora un cuadrado más grande que la diagonal de la pantalla, para que al crecer y girar nunca toque sus bordes.
+
+**Tests**
+- `products.spec` (el dial) se reemplazó por `paseo.spec`: paradas actuales con su foto, el momento "Ahora" y el reloj con hora fija, el raíl y movimiento reducido.
+- `layout.spec`: el header flota despegado del borde y un test nuevo del menú del celular (inert, Escape, foco).
+- `seo-nojs`: metadatos sin barra final (así los escribe Astro), los momentos como paradas y la hoja de estilos de `/_astro/`.
+- axe (WCAG 2.1 AA) sin violaciones en escritorio y celular.
+
+**Validación:** `astro check` y eslint limpios; Vitest 41/41; build y presupuesto ok; Playwright 154 pasados y 12 omitidos a propósito en m375, m390, t768, d1440 y no-js.

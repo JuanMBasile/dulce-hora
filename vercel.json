@@ -3,7 +3,7 @@
   "framework": null,
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
-  "outputDirectory": "build/client",
+  "outputDirectory": "dist",
   "trailingSlash": false,
   "redirects": [
     { "source": "/about", "destination": "/#historia", "permanent": false },

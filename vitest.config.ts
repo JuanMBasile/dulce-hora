@@ -1,23 +1,11 @@
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-// Config separada de vite.config.ts: los tests no necesitan el plugin de
-// React Router ni procesar fotos con sharp.
+// Los tests unitarios cubren la lógica pura de app/lib: no necesitan Astro ni las fotos.
 export default defineConfig({
-  resolve: {
-    tsconfigPaths: true,
-    alias: [
-      {
-        find: /^.+\.(?:jpe?g|png|webp|avif)\?preset=\w+$/,
-        replacement: fileURLToPath(new URL("./tests/unit/image-stub.ts", import.meta.url)),
-      },
-    ],
-  },
-  oxc: { jsx: { runtime: "automatic" } },
-  define: { __BUILD_YEAR__: "2026" },
+  resolve: { tsconfigPaths: true },
   test: {
     environment: "jsdom",
-    include: ["app/**/*.test.{ts,tsx}"],
+    include: ["app/**/*.test.ts"],
     setupFiles: ["./tests/unit/setup.ts"],
   },
 });

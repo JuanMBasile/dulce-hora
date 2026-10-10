@@ -1,4 +1,4 @@
-/* La moneda del centro del sello (BranchCoin.tsx): de un lado la ramita, del otro la foto
+/* La moneda del centro del sello (coin.ts): de un lado la ramita, del otro la foto
    de la sucursal. Se mide con el escenario del sello (cqmin): el sello ocupa 86cqmin. */
 
 .coin {

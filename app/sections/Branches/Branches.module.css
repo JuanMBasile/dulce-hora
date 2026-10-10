@@ -217,7 +217,7 @@
 }
 
 /* ---------- Filtros por zona ---------- */
-/* Una píldora blanca se desliza hasta el filtro activo (Branches.tsx la ubica). */
+/* Una píldora blanca se desliza hasta el filtro activo (branches-client.ts la ubica). */
 .chips {
   position: relative;
   display: flex;

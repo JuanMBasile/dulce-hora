@@ -1,0 +1,26 @@
+---
+import { brandColors } from "./colors";
+import seal from "./geometry/seal.json";
+
+type Props = {
+  class?: string;
+  /** Clase para el arco-reloj, que el paseo dibuja con stroke-dashoffset. */
+  arcClass?: string;
+};
+
+// Sello principal inline (para animarlo). Para usos estáticos, ver assets/brand/sello.svg.
+const { class: className, arcClass } = Astro.props;
+const { rojo, tostado, harina } = brandColors;
+---
+
+<svg viewBox={seal.viewBox} class={className} role="img" aria-label="Dulce Hora, panadería y pastelería">
+  <path fill={tostado} d={seal.festoon}></path>
+  <circle fill={harina} cx={seal.disc.cx} cy={seal.disc.cy} r={seal.disc.r}></circle>
+  <path class={arcClass} fill="none" stroke={rojo} stroke-width="4.5" stroke-linecap="round" pathLength="1" d={seal.arc}></path>
+  <path fill={rojo} d={seal.sprig}></path>
+  <path fill="none" stroke={harina} stroke-width="1.6" stroke-linecap="round" d={seal.veins}></path>
+  <path fill={tostado} d={seal.dulce}></path>
+  <path fill={rojo} d={seal.hora}></path>
+  <path fill={tostado} d={seal.descriptor}></path>
+  <path fill={rojo} d={seal.ampersand}></path>
+</svg>
