@@ -1,0 +1,16 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import styles from "./ButtonLink.module.css";
+
+export type ButtonVariant = "primary" | "secondary" | "inverse" | "almibar";
+
+type Props = HTMLAttributes<"a"> & {
+  /** primary: Rojo sobre Harina · secondary: contorno · inverse: Harina sobre Rojo · almibar: sobre Tostado */
+  variant?: ButtonVariant;
+};
+
+// Todas las llamadas a la acción del sitio son enlaces: anclas, WhatsApp o mailto.
+const { variant = "primary", class: className, ...rest } = Astro.props;
+---
+
+<a {...rest} data-variant={variant} class:list={[styles.button, className]}><slot /></a>

@@ -53,12 +53,9 @@ test("la escena queda fija y el festón se abre hasta mostrar el manifiesto comp
     )
     .toBeLessThan(0.05);
 
-  // A mitad del recorrido, el escenario sigue fijo bajo el header.
+  // A mitad del recorrido, el escenario sigue fijo a pantalla completa (el header flota encima).
   await scrollScene(page, 0.5);
-  const header = await page.getByRole("banner").evaluate((element) => element.getBoundingClientRect().height);
-  await expect
-    .poll(() => stage(page).evaluate((element) => Math.round(element.getBoundingClientRect().top)))
-    .toBe(Math.round(header));
+  await expect.poll(() => stage(page).evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(0);
 
   // Al final: la foto cubre toda la pantalla y cada palabra quedó encendida.
   await scrollScene(page, 1);

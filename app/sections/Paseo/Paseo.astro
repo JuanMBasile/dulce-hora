@@ -1,0 +1,207 @@
+---
+import { Picture } from "astro:assets";
+import Seal from "~/components/brand/Seal.astro";
+import ButtonLink from "~/components/ButtonLink/ButtonLink.astro";
+import { paradas } from "~/data/paseo";
+import { moments } from "~/data/products";
+import { heroCopy, primaryCta, sections, site } from "~/data/site";
+import styles from "./Paseo.module.css";
+
+// Palabras del título que van en Almíbar, como HORA en el sello.
+const ACCENT_WORDS = new Set(["hora"]);
+const words = heroCopy.title.split(" ");
+const pad = (n: number) => String(n).padStart(2, "0");
+const total = pad(paradas.length);
+const momentOf = (id: string | undefined) => moments.find((moment) => moment.id === id);
+const hasClips = paradas.some((parada) => parada.clip);
+---
+
+<!--
+  "Un día en Dulce Hora" (skills scroll-world y landing-page-design, referencia: el paseo de
+  Arko). El escenario queda fijo y el scroll recorre el día: cada parada deja su texto abajo a
+  la izquierda mientras su foto se funde con la siguiente y se acerca, como una cámara que
+  avanza. Si una parada tiene clip (scroll-world), el clip se scrubea encima de las fotos.
+  Sin JavaScript, el texto de todas las paradas queda a la vista sobre la primera foto.
+-->
+<section class={styles.world} data-world aria-label="Un día en Dulce Hora">
+  <div class={styles.stage} data-stage style="--focus-x: 46%">
+    <div class={styles.frames} aria-hidden="true">
+      {
+        paradas.map((parada, index) => (
+          <div class={styles.frame} data-frame style={index === 0 ? undefined : "opacity: 0"}>
+            <Picture
+              src={parada.photo}
+              alt=""
+              formats={["avif", "webp"]}
+              widths={[640, 960, 1280, 1616]}
+              sizes="(min-aspect-ratio: 3/2) 100vw, 150vh"
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchpriority={index === 0 ? "high" : "low"}
+              decoding="async"
+              pictureAttributes={{ class: styles.picture }}
+              class={styles.photo}
+            />
+          </div>
+        ))
+      }
+      {
+        hasClips && (
+          <div class={styles.clips}>
+            {paradas.map((parada) => (
+              <video
+                data-clip
+                data-src={parada.clip ?? ""}
+                muted
+                playsinline
+                preload="none"
+                disablepictureinpicture
+                {...{ disableremoteplayback: true }}
+                tabindex="-1"
+                class={styles.clip}
+              />
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Velos para leer el texto encima de las fotos. -->
+    <div class={styles.veilTop} aria-hidden="true"></div>
+    <div class={styles.veil} aria-hidden="true"></div>
+
+    <!-- El sello gira con el día, como un reloj. -->
+    <div class={styles.stamp} aria-hidden="true">
+      <div class={styles.stampTurn} data-day-seal>
+        <Seal class={styles.seal} arcClass={styles.arc} />
+      </div>
+    </div>
+
+    <nav aria-label="Momentos del día" class={styles.rail}>
+      <span class={styles.railLine} aria-hidden="true"><span class={styles.railFill} data-rail-fill></span></span>
+      <ol role="list" class={styles.railList}>
+        {
+          paradas.map((parada, index) => (
+            <li>
+              <a
+                href={`#${parada.id}`}
+                class={styles.railLink}
+                data-goto
+                data-moment={parada.moment}
+                aria-current={index === 0 ? "true" : undefined}
+              >
+                <span class={styles.railLabel}>
+                  {parada.lugar}
+                  {momentOf(parada.moment) ? <span class={styles.railHour}>{pad(momentOf(parada.moment)!.hour)} h</span> : null}
+                </span>
+                <span class={styles.railDot} aria-hidden="true" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <p class={styles.hint} data-hint aria-hidden="true">
+      Deslizá para recorrer el día
+      <span class={styles.hintLine}></span>
+    </p>
+  </div>
+
+  <!-- Paradas: cada una marca la distancia de scroll y deja su texto abajo a la izquierda. -->
+  <div class={styles.stops}>
+    <article id={sections.inicio} tabindex="-1" class={styles.stop} data-stop data-focus={paradas[0]!.focus}>
+      <div class={styles.body}>
+        <p class={styles.count}>
+          <span>{pad(1)} / {total}</span>
+          <span class={styles.countDot} aria-hidden="true"></span>
+          <span>Panadería y pastelería</span>
+        </p>
+        <h1 class={styles.title}>
+          {
+            words.map((word, index) => (
+              <>
+                <span class={styles.word}>
+                  <span
+                    class={styles.wordInner}
+                    data-accent={ACCENT_WORDS.has(word.toLowerCase()) || undefined}
+                    style={`--i: ${index}`}
+                  >
+                    {word}
+                  </span>
+                </span>{" "}
+              </>
+            ))
+          }
+        </h1>
+        <p class={styles.lead}>{heroCopy.lead}</p>
+        <div class={styles.actions}>
+          <ButtonLink href={primaryCta.href} variant="inverse">{primaryCta.label}</ButtonLink>
+          <a href={`#${sections.productos}`} class={styles.ghost}>Recorré el día</a>
+        </div>
+        <p class={styles.reach}>
+          {site.reach}
+          <!-- La hora real llega con JavaScript: el HTML no depende del momento del build. -->
+          <a class={styles.clock} data-clock hidden>
+            <span class={styles.dial} aria-hidden="true">
+              <span class:list={[styles.hand, styles.hourHand]} data-hand="hour"></span>
+              <span class:list={[styles.hand, styles.minuteHand]} data-hand="minute"></span>
+            </span>
+            <span data-clock-text></span>
+          </a>
+        </p>
+      </div>
+    </article>
+
+    {
+      paradas.slice(1).map((parada, index) => {
+        const moment = momentOf(parada.moment)!;
+        return (
+          <article
+            id={parada.id}
+            tabindex="-1"
+            class={styles.stop}
+            data-stop
+            data-focus={parada.focus}
+            aria-labelledby={`${parada.id}-titulo`}
+          >
+            <div class={styles.body}>
+              <p class={styles.count}>
+                <span>
+                  {pad(index + 2)} / {total}
+                </span>
+                <span class={styles.countDot} aria-hidden="true" />
+                <span>
+                  {pad(moment.hour)} h · {moment.label}
+                </span>
+                <span class={styles.now} data-now={moment.id} hidden>
+                  Ahora
+                </span>
+              </p>
+              <h2 id={`${parada.id}-titulo`} class={styles.heading}>
+                {moment.heading}
+              </h2>
+              <ul role="list" class={styles.categories}>
+                {moment.categories.map((category) => (
+                  <li class={styles.category}>
+                    <h3 class={styles.categoryName}>{category.name}</h3>
+                    <ul role="list" class={styles.items}>
+                      {category.items.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </article>
+        );
+      })
+    }
+  </div>
+</section>
+
+<script>
+  import { initPaseo } from "./paseo";
+
+  initPaseo();
+</script>

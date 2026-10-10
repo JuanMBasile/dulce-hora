@@ -1,0 +1,67 @@
+---
+import sealUrl from "~/assets/brand/sello.svg";
+import { contact, instagram, nav, sections } from "~/data/site";
+import { mailtoUrl, whatsappUrl } from "~/lib/urls";
+import styles from "./SiteFooter.module.css";
+
+const franchiseMessage = "Hola, quiero información sobre las franquicias de Dulce Hora.";
+// El año se fija en el build: el HTML es estático.
+const year = new Date().getFullYear();
+---
+
+<footer class:list={["surface-rojo festoon-top", styles.footer]}>
+  <div class:list={["page-width", styles.grid]}>
+    <div class={styles.brand} data-reveal>
+      <img
+        class={styles.seal}
+        src={sealUrl.src}
+        alt="Dulce Hora, panadería y pastelería"
+        width="400"
+        height="400"
+        loading="lazy"
+        decoding="async"
+      />
+      <p class={styles.tagline}>Panaderías cerca de casa en CABA, provincia de Buenos Aires y Rosario.</p>
+    </div>
+
+    <nav aria-labelledby="pie-secciones" class={styles.column} data-reveal style="--d: 80ms">
+      <h2 id="pie-secciones" class={styles.heading}>Secciones</h2>
+      <ul role="list" class={styles.list}>
+        {
+          nav.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <section aria-labelledby="pie-franquicias" class={styles.column} data-reveal style="--d: 160ms">
+      <h2 id="pie-franquicias" class={styles.heading}>Franquicias</h2>
+      <ul role="list" class={styles.list}>
+        <li>
+          <a href={whatsappUrl(contact.whatsapp, franchiseMessage)} rel="noopener">WhatsApp {contact.whatsappLabel}</a>
+        </li>
+        <li>
+          <a href={mailtoUrl(contact.email, "Franquicias Dulce Hora")}>{contact.email}</a>
+        </li>
+        <li class={styles.muted}>{contact.hours}</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pie-redes" class={styles.column} data-reveal style="--d: 240ms">
+      <h2 id="pie-redes" class={styles.heading}>Seguinos</h2>
+      <ul role="list" class={styles.list}>
+        <li>
+          <a href={instagram.url} rel="noopener">Instagram @{instagram.handle}</a>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  <div class:list={["page-width", styles.legal]}>
+    <p>© {year} Dulce Hora</p>
+    <a href={`#${sections.inicio}`}>Volver al inicio</a>
+  </div>
+</footer>

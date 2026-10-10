@@ -1,21 +1,23 @@
 // Controla los presupuestos de peso del build (plan, sección 7).
-// React Router borra el manifest de Vite con ssr:false, así que los recursos
-// iniciales se obtienen leyendo el index.html prerenderizado.
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+// Los recursos iniciales salen del index.html que genera Astro: los scripts de cada
+// sección y, siguiendo sus imports, los módulos compartidos (GSAP, Lenis, Motion).
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
-const CLIENT = fileURLToPath(new URL("../build/client/", import.meta.url));
+const CLIENT = fileURLToPath(new URL("../dist/", import.meta.url));
 const KB = 1024;
 
 const BUDGETS = {
-  initialJs: 140 * KB,
+  // Sin React, el JS inicial bajó de 138 KB a ~67 KB: el presupuesto lo deja fijo con margen.
+  initialJs: 90 * KB,
   css: 25 * KB,
   html: 40 * KB,
   preloadedFonts: 1,
   preloadedFontBytes: 80 * KB,
-  heroAvif828: 100 * KB,
+  // Primera foto del paseo (la del LCP), en AVIF de 960 px.
+  heroAvif960: 100 * KB,
 };
 
 const gz = (buffer) => gzipSync(buffer, { level: 9 }).length;
@@ -24,16 +26,23 @@ const readAsset = (href) => readFileSync(join(CLIENT, decodeURI(href.replace(/^\
 
 const indexPath = join(CLIENT, "index.html");
 if (!existsSync(indexPath)) {
-  console.error("No existe build/client/index.html. Corré `npm run build` primero.");
+  console.error("No existe dist/index.html. Corré `npm run build` primero.");
   process.exit(1);
 }
 const html = readFileSync(indexPath, "utf8");
 
-// JS inicial: módulos precargados, scripts con src e imports del script inline.
+// JS inicial: los scripts con src y, recursivamente, los módulos que importan.
 const jsHrefs = new Set();
-for (const [, href] of html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)) jsHrefs.add(href);
-for (const [, src] of html.matchAll(/<script[^>]+src="([^"]+\.js)"/g)) jsHrefs.add(src);
-for (const [, spec] of html.matchAll(/import\s*(?:[^"']*from\s*)?["'](\/assets\/[^"']+\.js)["']/g)) jsHrefs.add(spec);
+const follow = (href) => {
+  if (jsHrefs.has(href)) return;
+  jsHrefs.add(href);
+  const code = readAsset(href).toString("utf8");
+  for (const [, spec] of code.matchAll(/(?:from|import)\s*["'](\.{1,2}\/[^"']+\.js)["']/g)) {
+    follow(new URL(spec, `https://x${href}`).pathname);
+  }
+};
+for (const [, href] of html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)) follow(href);
+for (const [, src] of html.matchAll(/<script[^>]+src="([^"]+\.js)"/g)) follow(src);
 
 const cssHrefs = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map((m) => m[1]);
 const fontPreloads = [...html.matchAll(/<link rel="preload"[^>]+as="font"[^>]*>/g)].map((m) => m[0]);
@@ -57,17 +66,10 @@ for (const tag of fontPreloads) {
   if (href) check(`Fuente ${href.split("/").pop()}`, statSync(join(CLIENT, href)).size, BUDGETS.preloadedFontBytes);
 }
 
-// La foto del hero (avif 828w), cuando exista.
-const assetsDir = join(CLIENT, "assets");
-const heroAvif = readdirSync(assetsDir).find((name) => /^hero[-.].*828.*\.avif$/i.test(name) || /hero.*w828.*\.avif$/i.test(name));
-if (heroAvif) check(`Hero ${heroAvif}`, statSync(join(assetsDir, heroAvif)).size, BUDGETS.heroAvif828);
-
-// El chunk de las features de Motion nunca debe estar entre los scripts iniciales.
-const motionInitial = jsFiles.filter((f) => /motion-features/i.test(f.href));
-if (motionInitial.length > 0) {
-  failed = true;
-  rows.push({ recurso: "Chunk de Motion en el JS inicial", medido: motionInitial.map((f) => f.href).join(", "), limite: "ninguno", estado: "EXCEDE" });
-}
+// La primera foto del paseo es la del LCP: su AVIF de 960 px tiene presupuesto propio.
+const firstAvif = html.match(/<source[^>]*type="image\/avif"[^>]*>/)?.[0].match(/srcset="([^"]+)"/)?.[1];
+const avif960 = firstAvif?.split(",").map((entry) => entry.trim().split(/\s+/)).find(([, width]) => width === "960w")?.[0];
+if (avif960) check(`Paseo ${avif960.split("/").pop()}`, readAsset(avif960).length, BUDGETS.heroAvif960);
 
 console.table(rows);
 console.log("Scripts iniciales:");

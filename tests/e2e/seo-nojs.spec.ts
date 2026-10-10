@@ -12,7 +12,6 @@ const HERO_TITLE = "Siempre es buena hora para algo rico.";
 const HERO_LEAD =
   "Medialunas, facturas, panificados y pastelería elaborados cada día, con la calidad y el precio que tu barrio merece.";
 const SECTION_HEADINGS = [
-  "Un día en Dulce Hora",
   "Nuestra historia",
   "Panaderías cerca de casa",
   "Abrí tu propio Dulce Hora",
@@ -47,13 +46,14 @@ test.describe("HTML prerenderizado (sin ejecutar JS)", () => {
     expect(html).toMatch(/<html lang="es-AR"/);
     expect(html).toContain("<title>Dulce Hora | Panadería y pastelería</title>");
     expect(html).toMatch(/<meta name="description" content="Medialunas, facturas, panificados y pastelería[^"]+"/);
-    expect(html).toContain('<link rel="canonical" href="https://www.dulcehora.com.ar/"/>');
-    expect(html).toContain('<meta property="og:url" content="https://www.dulcehora.com.ar/"/>');
-    expect(html).toContain('<meta property="og:locale" content="es_AR"/>');
-    expect(html).toContain('<meta property="og:title" content="Dulce Hora | Panadería y pastelería"/>');
-    expect(html).toContain('<meta name="theme-color" content="#d50d17"/>');
-    expect(html).toContain('<link rel="manifest" href="/site.webmanifest"/>');
-    expect(html).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>');
+    // Astro escribe las etiquetas vacías sin la barra final.
+    expect(html).toMatch(/<link rel="canonical" href="https:\/\/www\.dulcehora\.com\.ar\/"\/?>/);
+    expect(html).toMatch(/<meta property="og:url" content="https:\/\/www\.dulcehora\.com\.ar\/"\/?>/);
+    expect(html).toMatch(/<meta property="og:locale" content="es_AR"\/?>/);
+    expect(html).toMatch(/<meta property="og:title" content="Dulce Hora \| Panadería y pastelería"\/?>/);
+    expect(html).toMatch(/<meta name="theme-color" content="#d50d17"\/?>/);
+    expect(html).toMatch(/<link rel="manifest" href="\/site\.webmanifest"\/?>/);
+    expect(html).toMatch(/<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"\/?>/);
   });
 
   test("trae un JSON-LD válido, solo con Organization", () => {
@@ -74,20 +74,16 @@ test.describe("HTML prerenderizado (sin ejecutar JS)", () => {
   });
 
   test("trae los cuatro momentos con todas sus categorías y productos", () => {
+    // El paseo: cada momento es una parada con su título, sus categorías y sus productos.
+    const h2 = headings(html, 2);
     const h3 = headings(html, 3);
-    const h4 = headings(html, 4);
     for (const moment of moments) {
-      expect(h3).toContain(moment.heading);
+      expect(h2).toContain(moment.heading);
       for (const category of moment.categories) {
-        expect(h4).toContain(category.name);
+        expect(h3).toContain(category.name);
         for (const item of category.items) expect(html).toContain(`<li>${item}</li>`);
       }
     }
-    // Los roles de pestañas se agregan recién al hidratar, y nada se oculta con `hidden`.
-    expect(html).not.toContain('role="tab"');
-    // (Se mira solo <main>: React usa un <div hidden> propio para sus scripts de streaming).
-    const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
-    expect(main).not.toMatch(/<[a-z]+[^>]*\shidden(=""|\s|\/?>)/);
   });
 
   test("trae la historia completa: manifiesto, origen, valores y cierre", () => {
@@ -102,17 +98,15 @@ test.describe("HTML prerenderizado (sin ejecutar JS)", () => {
   });
 
   test("trae el listado completo de sucursales en su lugar, con enlaces a Google Maps", () => {
-    // El buscador va en un chunk diferido: el HTML lo trae completo y dentro de <main>,
-    // no en un <div hidden> que solo JavaScript ubica (ver app/entry.server.tsx).
+    // El HTML estático trae el listado completo dentro de <main>.
     const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
     expect(main).toContain('id="sucursales"');
     for (const branch of branches) {
       expect(main).toContain(branch.address);
       expect(main).toContain(`href="${mapsSearchUrl(branchMapsQuery(branch)).replace("&", "&amp;")}"`);
     }
-    expect(html).not.toMatch(/<div hidden id="S:/);
-    // El CSS de la sección está enlazado en el HTML, no llega con el chunk.
-    expect(html).toMatch(/<link rel="stylesheet" href="\/assets\/style-[^"]+\.css"\/>/);
+    // El CSS está enlazado en el HTML: la sección se ve igual sin JavaScript.
+    expect(html).toMatch(/<link rel="stylesheet" href="\/_astro\/style\.[^"]+\.css"\/?>/);
   });
 
   test("trae los enlaces de navegación, los CTA y los contactos reales", () => {
@@ -149,7 +143,7 @@ test.describe("Página con JavaScript desactivado", () => {
   test("la navegación del header queda visible y operable", async ({ page }) => {
     await page.goto("/");
     // El botón de menú depende de JS: sin JS no se muestra.
-    await expect(page.getByRole("button", { name: "Menú" })).toBeHidden();
+    await expect(page.getByRole("button", { name: /menú/i })).toBeHidden();
 
     const nav = page.getByRole("navigation", { name: "Principal" });
     for (const item of NAV) {
@@ -164,16 +158,16 @@ test.describe("Página con JavaScript desactivado", () => {
 
   test("los cuatro momentos de productos quedan visibles y completos", async ({ page }) => {
     await page.goto("/");
-    const section = page.locator("#productos");
-    // El dial y sus pestañas dependen de JS: sin JS no se muestran.
-    await expect(section.getByRole("button")).toHaveCount(0);
-
+    // Sin JS el escenario no se mueve, pero el texto de cada parada queda a la vista.
     for (const moment of moments) {
-      const panel = section.getByRole("region", { name: moment.heading });
-      await expect(panel.getByRole("heading", { level: 3 })).toBeVisible();
+      const stop = page.getByRole("article", { name: moment.heading });
+      await stop.scrollIntoViewIfNeeded();
+      await expect(stop.getByRole("heading", { level: 2 })).toBeVisible();
       const items = moment.categories.flatMap((category) => category.items);
-      await expect(panel.getByRole("listitem")).toHaveText(items);
-      for (const item of await panel.getByRole("listitem").all()) await expect(item).toBeVisible();
+      await expect(stop.locator("ul ul > li")).toHaveText(items);
+      for (const name of moment.categories.map((category) => category.name)) {
+        await expect(stop.getByRole("heading", { level: 3, name })).toBeVisible();
+      }
     }
   });
 
